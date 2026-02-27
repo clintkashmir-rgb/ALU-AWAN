@@ -10,70 +10,74 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Search, MoreVertical, Edit2, Trash2 } from "lucide-react"
 import { mockSections } from "@/lib/mock-data"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 export default function SectionsPage() {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
           <SidebarTrigger />
           <h1 className="font-headline text-xl font-bold">Aluminum Sections</h1>
         </header>
 
-        <main className="flex-1 p-6 space-y-6">
+        <main className="flex-1 p-4 md:p-6 space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative w-full md:w-80">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-10" placeholder="Search sections..." />
+              <Input className="pl-10 h-11" placeholder="Search sections..." />
             </div>
-            <Button className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button className="w-full md:w-auto h-11 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
               <Plus className="h-4 w-4" /> Add Section
             </Button>
           </div>
 
-          <Card className="border-none shadow-lg">
-            <CardHeader>
+          <Card className="border-none shadow-lg overflow-hidden">
+            <CardHeader className="p-4 md:p-6">
               <CardTitle>Master Data: Sections</CardTitle>
               <CardDescription>Configure section profiles and their physical properties.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Section Name</TableHead>
-                    <TableHead>Default Formula</TableHead>
-                    <TableHead className="text-right">Weight (kg/ft)</TableHead>
-                    <TableHead className="w-12"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockSections.map((section) => (
-                    <TableRow key={section.id}>
-                      <TableCell className="font-bold">{section.name}</TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">{section.default_formula}</TableCell>
-                      <TableCell className="text-right font-medium text-accent">{section.weight_per_ft}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
-                              <Edit2 className="h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 text-destructive">
-                              <Trash2 className="h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[150px]">Section Name</TableHead>
+                      <TableHead className="min-w-[200px]">Default Formula</TableHead>
+                      <TableHead className="text-right min-w-[120px]">Weight (kg/ft)</TableHead>
+                      <TableHead className="w-12"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {mockSections.map((section) => (
+                      <TableRow key={section.id}>
+                        <TableCell className="font-bold">{section.name}</TableCell>
+                        <TableCell className="font-mono text-xs text-muted-foreground">{section.default_formula}</TableCell>
+                        <TableCell className="text-right font-medium text-accent">{section.weight_per_ft}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem className="gap-2">
+                                <Edit2 className="h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2 text-destructive">
+                                <Trash2 className="h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </CardContent>
           </Card>
         </main>

@@ -1,10 +1,23 @@
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: 'Awan Aluminum Manager',
   description: 'Industrial Precision in Aluminum Management',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Awan Manager',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#262B2F',
 };
 
 export default function RootLayout({

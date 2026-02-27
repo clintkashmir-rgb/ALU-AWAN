@@ -13,6 +13,7 @@ import { Plus, Trash2, Save, Calculator } from "lucide-react"
 import { WindowItem } from "@/lib/types"
 import { mockSections, mockColours, mockThickness, mockRates } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 
 export default function NewOrderPage() {
   const { toast } = useToast()
@@ -32,7 +33,7 @@ export default function NewOrderPage() {
 
   const addItem = () => {
     if (!formWidth || !formHeight) {
-      toast({ title: "Validation Error", description: "Width and Height are required." })
+      toast({ variant: "destructive", title: "Validation Error", description: "Width and Height are required." })
       return
     }
 
@@ -55,6 +56,8 @@ export default function NewOrderPage() {
     }
 
     setItems([...items, newItem])
+    setFormWidth("")
+    setFormHeight("")
     toast({ title: "Item Added", description: "Window row added to calculation table." })
   }
 
@@ -64,7 +67,6 @@ export default function NewOrderPage() {
 
   const totalSqFt = items.reduce((sum, item) => sum + item.sqFt, 0)
   
-  // Calculate Aluminum weight based on mock logic: Total Length = (W*2 + H*2) * Qty
   const totalWeight = items.reduce((sum, item) => {
     const section = mockSections.find(s => s.name === item.section)
     const weightPerFt = section?.weight_per_ft || 0.4
@@ -78,49 +80,50 @@ export default function NewOrderPage() {
   const labourCost = totalSqFt * mockRates.labour_rate_per_sqft
   
   const grossAmount = aluminumCost + glassCost + hardwareCost + labourCost
-  const netAmount = grossAmount - discount
+  const netAmount = Math.max(0, grossAmount - discount)
 
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background z-10">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
           <SidebarTrigger />
           <h1 className="font-headline text-xl font-bold">New Window Order</h1>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 space-y-6 pb-24 md:pb-6">
+        <main className="flex-1 p-4 md:p-6 space-y-6 pb-28 md:pb-6">
           <Card className="border-none shadow-lg">
-            <CardHeader>
-              <CardTitle>Customer Details</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-lg">Customer Details</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="grid gap-4 md:grid-cols-2 p-4 md:p-6 pt-0">
               <div className="space-y-2">
                 <Label htmlFor="customer">Customer Name</Label>
                 <Input 
                   id="customer" 
+                  className="h-11"
                   placeholder="Enter full name" 
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
-                <Input id="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                <Label htmlFor="date">Order Date</Label>
+                <Input id="date" className="h-11" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
               </div>
             </CardContent>
           </Card>
 
           <Card className="border-none shadow-lg">
-            <CardHeader>
-              <CardTitle>Window Entry Form</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-lg">Window Specification</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
-                  <Label>Window Type</Label>
+                  <Label>Type</Label>
                   <Select value={formType} onValueChange={(v: any) => setFormType(v)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -130,9 +133,9 @@ export default function NewOrderPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Palla Qty</Label>
+                  <Label>Palla</Label>
                   <Select value={formPalla} onValueChange={setFormPalla}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -144,7 +147,7 @@ export default function NewOrderPage() {
                 <div className="space-y-2">
                   <Label>Section</Label>
                   <Select value={formSection} onValueChange={setFormSection}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -157,7 +160,7 @@ export default function NewOrderPage() {
                 <div className="space-y-2">
                   <Label>Colour</Label>
                   <Select value={formColour} onValueChange={setFormColour}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -168,79 +171,66 @@ export default function NewOrderPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Thickness</Label>
-                  <Select value={formThickness} onValueChange={setFormThickness}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockThickness.map(t => (
-                        <SelectItem key={t.id} value={t.value}>{t.value}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
                   <Label>Width (ft)</Label>
-                  <Input type="number" step="0.01" value={formWidth} onChange={e => setFormWidth(e.target.value)} placeholder="0.00" />
+                  <Input type="number" className="h-11" step="0.01" value={formWidth} onChange={e => setFormWidth(e.target.value)} placeholder="0.00" />
                 </div>
                 <div className="space-y-2">
                   <Label>Height (ft)</Label>
-                  <Input type="number" step="0.01" value={formHeight} onChange={e => setFormHeight(e.target.value)} placeholder="0.00" />
+                  <Input type="number" className="h-11" step="0.01" value={formHeight} onChange={e => setFormHeight(e.target.value)} placeholder="0.00" />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 col-span-2">
                   <Label>Quantity</Label>
-                  <Input type="number" value={formQty} onChange={e => setFormQty(e.target.value)} />
+                  <Input type="number" className="h-11" value={formQty} onChange={e => setFormQty(e.target.value)} />
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="flex justify-end border-t pt-6">
-              <Button onClick={addItem} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+            <CardFooter className="flex justify-end border-t p-4">
+              <Button onClick={addItem} className="w-full md:w-auto h-11 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
                 <Plus className="h-4 w-4" /> Add to Order
               </Button>
             </CardFooter>
           </Card>
 
           <Card className="border-none shadow-lg overflow-hidden">
-            <CardHeader>
-              <CardTitle>Calculation Table</CardTitle>
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-lg">Order Summary Table</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              <ScrollArea className="w-full whitespace-nowrap">
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-12 text-center">#</TableHead>
-                      <TableHead>Section</TableHead>
-                      <TableHead>Specs</TableHead>
-                      <TableHead className="text-right">Width</TableHead>
-                      <TableHead className="text-right">Height</TableHead>
-                      <TableHead className="text-right">Qty</TableHead>
-                      <TableHead className="text-right">Sq.Ft</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                      <TableHead className="w-10 text-center">#</TableHead>
+                      <TableHead className="min-w-[120px]">Section</TableHead>
+                      <TableHead className="min-w-[150px]">Specs</TableHead>
+                      <TableHead className="text-right min-w-[80px]">Width</TableHead>
+                      <TableHead className="text-right min-w-[80px]">Height</TableHead>
+                      <TableHead className="text-right min-w-[60px]">Qty</TableHead>
+                      <TableHead className="text-right min-w-[90px]">Sq.Ft</TableHead>
+                      <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {items.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                          No items added yet. Use the form above.
+                          No items added yet.
                         </TableCell>
                       </TableRow>
                     ) : (
                       items.map((item, index) => (
                         <TableRow key={item.id}>
-                          <TableCell className="text-center text-xs font-mono">{index + 1}</TableCell>
-                          <TableCell className="font-medium">{item.section}</TableCell>
-                          <TableCell className="text-xs">
-                            {item.colour} | {item.thickness} | {item.type} ({item.pallaQty}P)
+                          <TableCell className="text-center text-[10px] font-mono">{index + 1}</TableCell>
+                          <TableCell className="font-medium text-sm">{item.section}</TableCell>
+                          <TableCell className="text-[10px] text-muted-foreground uppercase">
+                            {item.colour} • {item.thickness} • {item.pallaQty}P
                           </TableCell>
-                          <TableCell className="text-right">{item.width}</TableCell>
-                          <TableCell className="text-right">{item.height}</TableCell>
-                          <TableCell className="text-right">{item.quantity}</TableCell>
-                          <TableCell className="text-right font-bold text-accent">{item.sqFt}</TableCell>
+                          <TableCell className="text-right text-sm">{item.width}</TableCell>
+                          <TableCell className="text-right text-sm">{item.height}</TableCell>
+                          <TableCell className="text-right text-sm">{item.quantity}</TableCell>
+                          <TableCell className="text-right font-bold text-accent text-sm">{item.sqFt}</TableCell>
                           <TableCell>
-                            <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Button variant="ghost" size="icon" onClick={() => removeItem(item.id)} className="h-8 w-8 text-destructive hover:bg-destructive/10">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -249,42 +239,43 @@ export default function NewOrderPage() {
                     )}
                   </TableBody>
                 </Table>
-              </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </CardContent>
           </Card>
 
           <div className="grid gap-6 md:grid-cols-2">
              <Card className="border-none shadow-lg">
                 <CardHeader>
-                  <CardTitle>Cost Breakdown</CardTitle>
+                  <CardTitle className="text-lg">Cost Breakdown</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Aluminum Cost ({totalWeight.toFixed(2)}kg)</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground uppercase tracking-wider">Aluminum ({totalWeight.toFixed(2)}kg)</span>
                     <span className="font-medium">PKR {aluminumCost.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Glass Cost ({totalSqFt.toFixed(2)}sqft)</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground uppercase tracking-wider">Glass ({totalSqFt.toFixed(2)}sqft)</span>
                     <span className="font-medium">PKR {glassCost.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Hardware Cost ({items.length} windows)</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground uppercase tracking-wider">Hardware ({items.length} units)</span>
                     <span className="font-medium">PKR {hardwareCost.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Labour Cost</span>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground uppercase tracking-wider">Labour</span>
                     <span className="font-medium">PKR {labourCost.toLocaleString()}</span>
                   </div>
-                  <div className="pt-3 border-t flex justify-between font-bold">
-                    <span>Gross Amount</span>
+                  <div className="pt-3 border-t flex justify-between font-bold text-sm">
+                    <span className="uppercase">Gross Amount</span>
                     <span className="text-accent">PKR {grossAmount.toLocaleString()}</span>
                   </div>
                 </CardContent>
              </Card>
 
-             <Card className="border-none shadow-lg">
+             <Card className="border-none shadow-lg bg-accent/5">
                 <CardHeader>
-                  <CardTitle>Final Bill Summary</CardTitle>
+                  <CardTitle className="text-lg">Final Bill</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
@@ -292,38 +283,38 @@ export default function NewOrderPage() {
                     <Input 
                       id="discount" 
                       type="number" 
+                      className="h-11"
                       value={discount} 
                       onChange={e => setDiscount(parseFloat(e.target.value) || 0)}
-                      placeholder="Enter discount amount" 
+                      placeholder="0" 
                     />
                   </div>
-                  <div className="bg-muted/30 p-4 rounded-lg space-y-2">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-sm text-muted-foreground">Net Payable</span>
-                      <span className="text-3xl font-bold text-accent">PKR {netAmount.toLocaleString()}</span>
+                  <div className="bg-background p-4 rounded-lg border border-accent/20">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold">Total Net Payable</span>
+                      <span className="text-3xl font-black text-accent">PKR {netAmount.toLocaleString()}</span>
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="gap-4">
-                  <Button variant="outline" className="flex-1 gap-2">
+                <CardFooter className="gap-3">
+                  <Button variant="outline" className="flex-1 h-12 gap-2">
                     <Calculator className="h-4 w-4" /> Quote
                   </Button>
-                  <Button className="flex-1 gap-2 bg-primary hover:bg-primary/90">
-                    <Save className="h-4 w-4" /> Save & Generate
+                  <Button className="flex-1 h-12 gap-2 bg-primary hover:bg-primary/90">
+                    <Save className="h-4 w-4" /> Save
                   </Button>
                 </CardFooter>
-             </Card>
+             </div>
           </div>
         </main>
 
-        {/* Mobile Sticky Footer */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t p-4 flex justify-between items-center shadow-[0_-4px_10px_rgba(0,0,0,0.1)] z-20">
-          <div>
-            <p className="text-xs text-muted-foreground">Total Sq.Ft: {totalSqFt.toFixed(1)}</p>
-            <p className="font-bold text-accent">Net: PKR {netAmount.toLocaleString()}</p>
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t p-4 flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.2)] z-30">
+          <div className="flex flex-col">
+            <p className="text-[10px] text-muted-foreground uppercase font-bold">{totalSqFt.toFixed(1)} Sq.Ft Total</p>
+            <p className="font-black text-accent text-lg">PKR {netAmount.toLocaleString()}</p>
           </div>
-          <Button size="sm" className="gap-2">
-            <Save className="h-4 w-4" /> Save Order
+          <Button size="lg" className="h-12 px-6 gap-2 font-bold shadow-lg shadow-primary/20">
+            <Save className="h-5 w-5" /> SAVE
           </Button>
         </div>
       </SidebarInset>
