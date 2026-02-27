@@ -3,6 +3,7 @@ export interface Section {
   name: string;
   default_formula: string;
   weight_per_ft: number;
+  rate_per_ft?: number;
 }
 
 export interface Colour {
@@ -15,12 +16,25 @@ export interface Thickness {
   value: string;
 }
 
+export interface GlassType {
+  id: string;
+  name: string;
+  rate_per_sqft: number;
+}
+
+export interface HardwareItem {
+  id: string;
+  name: string;
+  rate: number;
+}
+
 export interface Rate {
   id: string;
   aluminum_rate_per_kg: number;
   glass_rate_per_sqft: number;
   hardware_rate: number;
   labour_rate_per_sqft: number;
+  frame_rate_per_ft: number;
 }
 
 export interface WindowItem {
@@ -28,12 +42,16 @@ export interface WindowItem {
   type: 'Fixed' | 'Sliding';
   pallaQty: number;
   colour: string;
-  thickness: string;
-  width: number;
-  height: number;
+  glassType: string;
+  width: number; // in feet
+  height: number; // in feet
   quantity: number;
-  sqFt: number;
-  section?: string;
+  frameFt: number;
+  glassSqFt: number;
+  frameCost: number;
+  glassCost: number;
+  hardwareCost: number;
+  totalCost: number;
 }
 
 export interface Invoice {
