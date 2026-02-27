@@ -88,11 +88,11 @@ export default function NewOrderPage() {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
           <SidebarTrigger />
-          <h1 className="font-headline text-xl font-bold">New Window Order</h1>
+          <h1 className="font-headline text-xl font-bold truncate">New Window Order</h1>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 space-y-6 pb-28 md:pb-6">
-          <Card className="border-none shadow-lg">
+        <main className="flex-1 p-4 md:p-6 space-y-6 pb-32 md:pb-6 overflow-x-hidden max-w-full">
+          <Card className="border-none shadow-lg overflow-hidden">
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="text-lg">Customer Details</CardTitle>
             </CardHeader>
@@ -114,7 +114,7 @@ export default function NewOrderPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-lg">
+          <Card className="border-none shadow-lg overflow-hidden">
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="text-lg">Window Specification</CardTitle>
             </CardHeader>
@@ -185,7 +185,7 @@ export default function NewOrderPage() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end border-t p-4">
-              <Button onClick={addItem} className="w-full md:w-auto h-11 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
+              <Button onClick={addItem} className="w-full h-11 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
                 <Plus className="h-4 w-4" /> Add to Order
               </Button>
             </CardFooter>
@@ -313,7 +313,7 @@ export default function NewOrderPage() {
             <p className="text-[10px] text-muted-foreground uppercase font-bold">{totalSqFt.toFixed(1)} Sq.Ft Total</p>
             <p className="font-black text-accent text-lg">PKR {netAmount.toLocaleString()}</p>
           </div>
-          <Button size="lg" className="h-12 px-6 gap-2 font-bold shadow-lg shadow-primary/20">
+          <Button size="lg" className="h-12 px-6 gap-2 font-bold shadow-lg shadow-primary/20 bg-accent text-accent-foreground">
             <Save className="h-5 w-5" /> SAVE
           </Button>
         </div>
