@@ -304,7 +304,7 @@ export default function NewOrderPage() {
                     <Save className="h-4 w-4" /> Save
                   </Button>
                 </CardFooter>
-             </div>
+             </Card>
           </div>
         </main>
 
