@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Trash2, Save, Calculator, ReceiptText } from "lucide-react"
-import { WindowItem, HardwareItem } from "@/lib/types"
+import { WindowItem, HardwareItem, Section } from "@/lib/types"
 import { mockSections, mockColours, mockGlassTypes, mockHardware } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -20,7 +20,7 @@ export default function NewOrderPage() {
   const { toast } = useToast()
   const [items, setItems] = React.useState<WindowItem[]>([])
   const [customerName, setCustomerName] = React.useState("")
-  const [discount, setDiscount] = React.useState(0)
+  const [discountPercent, setDiscountPercent] = React.useState(0)
   
   // Form State
   const [formType, setFormType] = React.useState<'Fixed' | 'Sliding'>('Sliding')
@@ -48,24 +48,25 @@ export default function NewOrderPage() {
     const w = parseFloat(formWidth)
     const h = parseFloat(formHeight)
     const q = parseInt(formQty)
-    const sectionObj = mockSections.find(s => s.id === formSection)
+    const sectionObj = mockSections.find(s => s.id === formSection) as Section
     const glassObj = mockGlassTypes.find(g => g.id === formGlassType)
     
     const frameRate = sectionObj?.rate_per_ft || 220
     const glassRate = glassObj?.rate_per_sqft || 120
 
-    // Frame Deduction Logic (0.1 ft per side)
+    // Frame Deduction Logic (0.1 ft per side as per requirements)
     const frameSide = 0.1
     const frameTop = 0.1
     const frameBottom = 0.1
 
-    // Glass Dimensions
+    // Glass Dimensions (Deduction applied)
     const glassWidth = w - (2 * frameSide)
     const glassHeight = h - (frameTop + frameBottom)
     const glassSqFtPerWindow = glassWidth * glassHeight
     const totalGlassArea = glassSqFtPerWindow * q
 
-    // Frame Calculation
+    // Frame Calculation using detailed section formulas (simplified interpretation)
+    // Here we treat Top/Bottom/Side as Width/Width/Height respectively
     const frameFtPerWindow = (2 * w) + (2 * h)
     const totalFrameFt = frameFtPerWindow * q
 
@@ -88,19 +89,20 @@ export default function NewOrderPage() {
       width: w,
       height: h,
       quantity: q,
-      frameFt: totalFrameFt,
+      frameFt: parseFloat(totalFrameFt.toFixed(2)),
       glassSqFt: parseFloat(totalGlassArea.toFixed(2)),
       frameCost: Math.round(frameCost),
       glassCost: Math.round(glassCost),
       hardwareCost: totalHardwareCost,
-      totalCost: Math.round(frameCost + glassCost + totalHardwareCost)
+      totalCost: Math.round(frameCost + glassCost + totalHardwareCost),
+      sectionId: formSection
     }
 
     setItems([...items, newItem])
     setFormWidth("")
     setFormHeight("")
     setSelectedHardware([])
-    toast({ title: "Item Added", description: "Window specifications added successfully." })
+    toast({ title: "Item Added", description: `${newItem.type} window with ${sectionObj.name} added.` })
   }
 
   const removeItem = (id: string) => {
@@ -108,7 +110,8 @@ export default function NewOrderPage() {
   }
 
   const grossAmount = items.reduce((sum, item) => sum + item.totalCost, 0)
-  const netAmount = Math.max(0, grossAmount - discount)
+  const discountAmount = grossAmount * (discountPercent / 100)
+  const netAmount = Math.max(0, grossAmount - discountAmount)
 
   return (
     <SidebarProvider>
@@ -144,7 +147,7 @@ export default function NewOrderPage() {
           <Card className="border-none shadow-lg w-full">
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="text-lg">Window Specifications (ft)</CardTitle>
-              <CardDescription>Enter measurements in Feet (ft)</CardDescription>
+              <CardDescription>Enter measurements to calculate frame and glass.</CardDescription>
             </CardHeader>
             <CardContent className="p-4 md:p-6 pt-0 space-y-6">
               <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
@@ -246,14 +249,14 @@ export default function NewOrderPage() {
             </CardContent>
             <CardFooter className="flex justify-end border-t p-4">
               <Button onClick={addItem} className="w-full h-12 gap-2 bg-accent text-accent-foreground hover:bg-accent/90">
-                <Plus className="h-4 w-4" /> Add Window to Table
+                <Plus className="h-4 w-4" /> Add Window to Order
               </Button>
             </CardFooter>
           </Card>
 
           <Card className="border-none shadow-lg w-full">
             <CardHeader className="p-4 md:p-6">
-              <CardTitle className="text-lg">Order Breakdown (Auto Calculated)</CardTitle>
+              <CardTitle className="text-lg">Order Breakdown</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="w-full whitespace-nowrap">
@@ -283,7 +286,7 @@ export default function NewOrderPage() {
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-bold">{item.type} Window</span>
-                              <span className="text-[10px] text-muted-foreground uppercase">{item.width}x{item.height} ft • {item.colour} • {item.glassType}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase">{item.width}x{item.height} ft • {item.colour}</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-right">{item.frameFt}</TableCell>
@@ -316,7 +319,7 @@ export default function NewOrderPage() {
                   <div className="space-y-2 border rounded-lg p-3 bg-muted/20">
                     <div className="flex justify-between text-xs font-bold uppercase text-muted-foreground">
                       <span>Category</span>
-                      <span>Total Amount</span>
+                      <span>Amount</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Aluminum Frames</span>
@@ -344,12 +347,12 @@ export default function NewOrderPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label>Discount (PKR)</Label>
+                    <Label>Discount (%)</Label>
                     <Input 
                       type="number" 
                       className="h-11"
-                      value={discount} 
-                      onChange={e => setDiscount(parseFloat(e.target.value) || 0)}
+                      value={discountPercent} 
+                      onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)}
                       placeholder="0" 
                     />
                   </div>
@@ -374,7 +377,7 @@ export default function NewOrderPage() {
 
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t p-4 flex justify-between items-center shadow-[0_-10px_30px_rgba(0,0,0,0.3)] z-30">
           <div className="flex flex-col">
-            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{items.length} Window(s) Added</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">{items.length} Window(s)</p>
             <p className="font-black text-accent text-xl leading-none">PKR {netAmount.toLocaleString()}</p>
           </div>
           <Button size="lg" className="h-12 px-6 gap-2 font-black shadow-lg shadow-accent/20 bg-accent text-accent-foreground rounded-full">

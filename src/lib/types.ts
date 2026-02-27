@@ -1,7 +1,9 @@
 export interface Section {
   id: string;
   name: string;
-  default_formula: string;
+  top_formula: string;
+  bottom_formula: string;
+  side_formula: string;
   weight_per_ft: number;
   rate_per_ft?: number;
 }
@@ -52,6 +54,7 @@ export interface WindowItem {
   glassCost: number;
   hardwareCost: number;
   totalCost: number;
+  sectionId: string;
 }
 
 export interface Invoice {

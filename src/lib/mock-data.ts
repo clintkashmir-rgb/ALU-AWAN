@@ -1,9 +1,33 @@
 import { Section, Colour, Thickness, Rate, GlassType, HardwareItem } from './types';
 
 export const mockSections: Section[] = [
-  { id: '1', name: 'DC30C', default_formula: '(Width * 2) + (Height * 2)', weight_per_ft: 0.4, rate_per_ft: 220 },
-  { id: '2', name: 'DC2BC', default_formula: '(Width * 2) + (Height * 2)', weight_per_ft: 0.45, rate_per_ft: 240 },
-  { id: '3', name: 'M23', default_formula: '(Width * 2) + (Height * 2)', weight_per_ft: 0.38, rate_per_ft: 210 },
+  { 
+    id: '1', 
+    name: 'DC30C', 
+    top_formula: 'Width', 
+    bottom_formula: 'Width', 
+    side_formula: 'Height', 
+    weight_per_ft: 0.4, 
+    rate_per_ft: 220 
+  },
+  { 
+    id: '2', 
+    name: 'DC2BC', 
+    top_formula: 'Width', 
+    bottom_formula: 'Width', 
+    side_formula: 'Height', 
+    weight_per_ft: 0.45, 
+    rate_per_ft: 240 
+  },
+  { 
+    id: '3', 
+    name: 'M23', 
+    top_formula: 'Width', 
+    bottom_formula: 'Width', 
+    side_formula: 'Height', 
+    weight_per_ft: 0.38, 
+    rate_per_ft: 210 
+  },
 ];
 
 export const mockColours: Colour[] = [
