@@ -1,47 +1,650 @@
-
 {
   "entities": {
-    "Section": {
-      "title": "Section",
-      "description": "Aluminum section profile details",
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
       "type": "object",
+      "description": "Represents a user profile with roles and basic contact information. This entity is distinct from authentication data managed by an external system.",
       "properties": {
-        "name": { "type": "string" },
-        "type": { "type": "string", "enum": ["Sliding", "Fixed", "Both"] },
-        "top_formula": { "type": "string" },
-        "bottom_formula": { "type": "string" },
-        "side_formula": { "type": "string" },
-        "weight_per_ft": { "type": "number" },
-        "rate_per_ft": { "type": "number" }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address, used for contact and identification.",
+          "format": "email"
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the user."
+        },
+        "role": {
+          "type": "string",
+          "description": "The role of the user within the application (e.g., 'Owner', 'Staff')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was last updated.",
+          "format": "date-time"
+        }
       },
-      "required": ["name", "type"]
+      "required": [
+        "id",
+        "email",
+        "name",
+        "role",
+        "createdAt",
+        "updatedAt"
+      ]
     },
-    "Order": {
-      "title": "Order",
-      "description": "Customer window order or quote",
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
       "type": "object",
+      "description": "Represents a customer who places orders for aluminum products.",
       "properties": {
-        "customerName": { "type": "string" },
-        "date": { "type": "string", "format": "date" },
-        "items": { "type": "array" },
-        "grossAmount": { "type": "number" },
-        "discount": { "type": "number" },
-        "netAmount": { "type": "number" },
-        "status": { "type": "string", "enum": ["Draft", "Sent", "Paid"] }
-      }
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Customer entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the customer."
+        },
+        "phone": {
+          "type": "string",
+          "description": "The primary contact phone number for the customer."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the customer (optional).",
+          "format": "email"
+        },
+        "address": {
+          "type": "string",
+          "description": "The physical address of the customer (optional)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the customer record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the customer record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "phone",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Section": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Section",
+      "type": "object",
+      "description": "Represents a specific aluminum section type, including its physical properties and calculation formulas.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Section entity (e.g., 'DC30C')."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or code of the aluminum section (e.g., 'DC30C')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the section (optional)."
+        },
+        "defaultFormula": {
+          "type": "string",
+          "description": "The default formula string used for calculating the total length of this section within a window item."
+        },
+        "weightPerFt": {
+          "type": "number",
+          "description": "The weight of one foot of this aluminum section in kilograms."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the section record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the section record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "defaultFormula",
+        "weightPerFt",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Colour": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Colour",
+      "type": "object",
+      "description": "Represents available colors for aluminum products.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Colour entity (e.g., '9016')."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name or code of the color (e.g., '9016', 'Black')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the colour record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the colour record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Thickness": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Thickness",
+      "type": "object",
+      "description": "Represents available thickness options for aluminum products.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Thickness entity (e.g., '1.2mm')."
+        },
+        "name": {
+          "type": "string",
+          "description": "The descriptive name of the thickness (e.g., '1.2mm', '1.4mm')."
+        },
+        "valueMm": {
+          "type": "number",
+          "description": "The numeric value of the thickness in millimeters, used for calculations."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the thickness record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the thickness record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "valueMm",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RateSetting": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RateSetting",
+      "type": "object",
+      "description": "Defines various rate types used in calculations for invoices, such as material costs, labor, and hardware.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the RateSetting entity (e.g., 'aluminum_rate_per_kg')."
+        },
+        "name": {
+          "type": "string",
+          "description": "A human-readable name for the rate setting (e.g., 'Aluminum Rate per Kg')."
+        },
+        "unit": {
+          "type": "string",
+          "description": "The unit of measurement for this rate (e.g., 'per_kg', 'per_sqft', 'fixed')."
+        },
+        "rateValue": {
+          "type": "number",
+          "description": "The current numeric value of the rate."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the rate setting was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the rate setting was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "unit",
+        "rateValue",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Invoice": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Invoice",
+      "type": "object",
+      "description": "Represents a generated invoice for a customer order, including all financial summaries and references to line items.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Invoice entity (system-generated UUID)."
+        },
+        "invoiceNumber": {
+          "type": "string",
+          "description": "A human-readable, sequentially generated invoice number."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to Customer. (Relationship: Customer 1:N Invoice)"
+        },
+        "invoiceDate": {
+          "type": "string",
+          "description": "The date when the invoice was issued.",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the invoice (e.g., 'Draft', 'Issued', 'Paid', 'Cancelled')."
+        },
+        "grossAmount": {
+          "type": "number",
+          "description": "The total amount before any discounts or additional charges, based on calculated item costs."
+        },
+        "discountAmount": {
+          "type": "number",
+          "description": "The manual discount applied to the invoice."
+        },
+        "netAmount": {
+          "type": "number",
+          "description": "The final amount payable after all calculations, discounts, and additional charges."
+        },
+        "additionalCharges": {
+          "type": "number",
+          "description": "Any manual additional charges added to the invoice."
+        },
+        "aluminumCost": {
+          "type": "number",
+          "description": "The calculated total cost of aluminum for all items in the invoice."
+        },
+        "glassCost": {
+          "type": "number",
+          "description": "The calculated total cost of glass for all items in the invoice."
+        },
+        "hardwareCost": {
+          "type": "number",
+          "description": "The calculated total cost of hardware for all items in the invoice."
+        },
+        "labourCost": {
+          "type": "number",
+          "description": "The calculated total labor cost for the invoice."
+        },
+        "pdfStoragePath": {
+          "type": "string",
+          "description": "The URI path to the generated PDF invoice stored in Firebase Storage.",
+          "format": "uri"
+        },
+        "createdByUserId": {
+          "type": "string",
+          "description": "Reference to UserProfile, indicating which user created this invoice. (Relationship: UserProfile 1:N Invoice)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the invoice record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the invoice record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "invoiceNumber",
+        "customerId",
+        "invoiceDate",
+        "status",
+        "grossAmount",
+        "netAmount",
+        "createdByUserId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "InvoiceItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InvoiceItem",
+      "type": "object",
+      "description": "Represents a single line item (e.g., a window) within an invoice, detailing its specifications and calculated square footage.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the InvoiceItem entity."
+        },
+        "invoiceId": {
+          "type": "string",
+          "description": "Reference to Invoice. (Relationship: Invoice 1:N InvoiceItem)"
+        },
+        "windowType": {
+          "type": "string",
+          "description": "The type of window (e.g., 'Fixed', 'Sliding')."
+        },
+        "pallaQuantity": {
+          "type": "number",
+          "description": "The quantity of 'palla' (panels) in the window (e.g., 2, 3)."
+        },
+        "colourId": {
+          "type": "string",
+          "description": "Reference to Colour. (Relationship: Colour 1:N InvoiceItem)"
+        },
+        "thicknessId": {
+          "type": "string",
+          "description": "Reference to Thickness. (Relationship: Thickness 1:N InvoiceItem)"
+        },
+        "widthFt": {
+          "type": "number",
+          "description": "The width of the window in feet."
+        },
+        "heightFt": {
+          "type": "number",
+          "description": "The height of the window in feet."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The number of identical windows specified in this line item."
+        },
+        "squareFootage": {
+          "type": "number",
+          "description": "The total calculated square footage for this line item (Width × Height × Quantity)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the invoice item record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the invoice item record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "invoiceId",
+        "windowType",
+        "pallaQuantity",
+        "colourId",
+        "thicknessId",
+        "widthFt",
+        "heightFt",
+        "quantity",
+        "squareFootage",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "InvoiceSectionItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InvoiceSectionItem",
+      "type": "object",
+      "description": "Details the specific sections used within an InvoiceItem, including their calculated lengths, weights, and costs.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the InvoiceSectionItem entity."
+        },
+        "invoiceItemId": {
+          "type": "string",
+          "description": "Reference to InvoiceItem. (Relationship: InvoiceItem 1:N InvoiceSectionItem)"
+        },
+        "sectionId": {
+          "type": "string",
+          "description": "Reference to Section. (Relationship: Section 1:N InvoiceSectionItem)"
+        },
+        "calculatedLengthFt": {
+          "type": "number",
+          "description": "The calculated total length of this specific section type required for the invoice item, in feet."
+        },
+        "calculatedWeightKg": {
+          "type": "number",
+          "description": "The calculated total weight of this specific section type required for the invoice item, in kilograms."
+        },
+        "unitCostPerKg": {
+          "type": "number",
+          "description": "The cost per kilogram for this section at the time of invoicing. This value is captured from the current RateSetting for historical accuracy."
+        },
+        "totalCost": {
+          "type": "number",
+          "description": "The total cost for this specific section type within the invoice item (calculatedWeightKg × unitCostPerKg)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the invoice section item record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the invoice section item record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "invoiceItemId",
+        "sectionId",
+        "calculatedLengthFt",
+        "calculatedWeightKg",
+        "unitCostPerKg",
+        "totalCost",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AppSetting": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AppSetting",
+      "type": "object",
+      "description": "Holds global application-wide configuration settings, such as app name and potentially default formulas if not tied to specific sections.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AppSetting entity (e.g., 'app_config' for a singleton document)."
+        },
+        "appName": {
+          "type": "string",
+          "description": "The official name of the application, as displayed to users."
+        },
+        "defaultAluminiumFormula": {
+          "type": "string",
+          "description": "A global default formula string for aluminum calculation, if applicable beyond specific sections (optional)."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the app setting record was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the app setting record was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "appName",
+        "createdAt",
+        "updatedAt"
+      ]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
-    "/sections/{sectionId}": {
-      "schema": { "$ref": "#/backend/entities/Section" },
-      "description": "Collection of aluminum section profiles"
-    },
-    "/orders/{orderId}": {
-      "schema": { "$ref": "#/backend/entities/Order" },
-      "description": "Collection of customer orders"
-    }
+    "structure": [
+      {
+        "path": "/user_profiles/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores individual user profiles. The document ID is the Firebase Authentication User ID. Access is primarily by the user themselves, with administrative access for 'Owner' role. Includes the user's 'role' for application-level logic, but authorization for global roles relies on separate 'roles_owner' or 'roles_staff' collections."
+        }
+      },
+      {
+        "path": "/roles_owner/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "A collection used purely for authorization checks. A document exists here if the corresponding userId has the 'Owner' role. Relies on 'Existence over Content' principle for DBAC.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user (from Firebase Auth)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_staff/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "A collection used purely for authorization checks. A document exists here if the corresponding userId has the 'Staff' role. Relies on 'Existence over Content' principle for DBAC.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique ID of the user (from Firebase Auth)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/customers/{customerId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Stores customer information. Accessible for CRUD operations by 'Owner' and 'Staff' roles."
+        }
+      },
+      {
+        "path": "/master_data/sections/{sectionId}",
+        "definition": {
+          "entityName": "Section",
+          "schema": {
+            "$ref": "#/backend/entities/Section"
+          },
+          "description": "Stores master data for aluminum sections. Read-only for all authenticated users, CRUD for 'Owner' role. Grouped under 'master_data' for consistent security posture."
+        }
+      },
+      {
+        "path": "/master_data/colours/{colourId}",
+        "definition": {
+          "entityName": "Colour",
+          "schema": {
+            "$ref": "#/backend/entities/Colour"
+          },
+          "description": "Stores master data for available colors. Read-only for all authenticated users, CRUD for 'Owner' role. Grouped under 'master_data' for consistent security posture."
+        }
+      },
+      {
+        "path": "/master_data/thickness/{thicknessId}",
+        "definition": {
+          "entityName": "Thickness",
+          "schema": {
+            "$ref": "#/backend/entities/Thickness"
+          },
+          "description": "Stores master data for available thickness options. Read-only for all authenticated users, CRUD for 'Owner' role. Grouped under 'master_data' for consistent security posture."
+        }
+      },
+      {
+        "path": "/master_data/rates/{rateSettingId}",
+        "definition": {
+          "entityName": "RateSetting",
+          "schema": {
+            "$ref": "#/backend/entities/RateSetting"
+          },
+          "description": "Stores master data for various rate settings (e.g., aluminum per kg). Read-only for all authenticated users, CRUD for 'Owner' role. Grouped under 'master_data' for consistent security posture."
+        }
+      },
+      {
+        "path": "/invoices/{invoiceId}",
+        "definition": {
+          "entityName": "Invoice",
+          "schema": {
+            "$ref": "#/backend/entities/Invoice"
+          },
+          "description": "Stores invoice details. Includes 'createdByUserId' for authorization, allowing 'Owner' and the creating 'Staff' to manage it. This enables authorization independence for rules without relying on external documents for basic access checks."
+        }
+      },
+      {
+        "path": "/invoices/{invoiceId}/items/{invoiceItemId}",
+        "definition": {
+          "entityName": "InvoiceItem",
+          "schema": {
+            "$ref": "#/backend/entities/InvoiceItem"
+          },
+          "description": "Stores individual line items within an invoice. Includes denormalized 'invoiceId' and 'createdByUserId' (from the parent invoice) for authorization independence, allowing direct access control without fetching the parent 'Invoice' document. This supports secure collection group queries (QAPs)."
+        }
+      },
+      {
+        "path": "/invoices/{invoiceId}/items/{invoiceItemId}/sections/{invoiceSectionItemId}",
+        "definition": {
+          "entityName": "InvoiceSectionItem",
+          "schema": {
+            "$ref": "#/backend/entities/InvoiceSectionItem"
+          },
+          "description": "Stores details of specific aluminum sections used within an InvoiceItem. Includes denormalized 'invoiceId', 'invoiceItemId', and 'createdByUserId' (from the grandparent invoice) for authorization independence, allowing direct access control without fetching parent 'InvoiceItem' or grandparent 'Invoice' documents. This supports secure collection group queries (QAPs)."
+        }
+      },
+      {
+        "path": "/app_settings/config",
+        "definition": {
+          "entityName": "AppSetting",
+          "schema": {
+            "$ref": "#/backend/entities/AppSetting"
+          },
+          "description": "A singleton document holding global application settings. The document ID is fixed as 'config'. Read-only for all authenticated users, CRUD for 'Owner' role."
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for 'Awan Aluminum Manager' is designed with a strong emphasis on Authorization Independence, Structural Segregation, and consistent Access Modeling to ensure security, scalability, and debuggability. All core design principles and strategy mandates have been prioritized.\n\n**Authorization Independence (CRITICAL) and QAPs:**\nTo achieve Authorization Independence and enable Query-based Access Patterns (QAPs), a key denormalization strategy is applied to transactional data:\n\n1.  **User-Specific Data:** The `/user_profiles/{userId}` collection uses `request.auth.uid` as the document ID, making ownership explicit and rules simple. \n2.  **Global Roles:** Instead of embedding roles directly in `UserProfile` for authorization, dedicated collections `/roles_owner/{userId}` and `/roles_staff/{userId}` are used. Authorization rules will perform `exists()` checks on these collections, adhering to the 'Existence over Content' principle for global roles. This avoids `get()` calls on `UserProfile` documents for basic role checks, simplifying global authorization rules.\n3.  **Invoice and Nested Items:** For `Invoice`, `InvoiceItem`, and `InvoiceSectionItem`, access control typically depends on who created the invoice or their role. To prevent hierarchical authorization dependencies (`get()` calls in rules), the `createdByUserId` field from the parent `Invoice` is **denormalized** down into every `InvoiceItem` and `InvoiceSectionItem` document. This means:\n    *   An `Invoice` document (in `/invoices/{invoiceId}`) contains `createdByUserId`.\n    *   An `InvoiceItem` document (in `/invoices/{invoiceId}/items/{invoiceItemId}`) contains its own `invoiceId` and the `createdByUserId` of its parent invoice.\n    *   An `InvoiceSectionItem` document (in `/invoices/{invoiceId}/items/{invoiceItemId}/sections/{invoiceSectionItemId}`) contains its own `invoiceItemId`, its grandparent `invoiceId`, and the `createdByUserId` of its grandparent invoice.\n    This denormalization allows security rules for `InvoiceItem` and `InvoiceSectionItem` to directly evaluate ownership or staff access using `resource.data.createdByUserId` without needing to fetch any parent documents. This makes operations atomic and rules highly performant and easy to debug. It also enables secure `list` operations via collection group queries on `invoice_items` or `invoice_section_items` by simply filtering `where createdByUserId == request.auth.uid`.\n\n**Structural Segregation:**\n*   **Master Data:** All static lookup data (Sections, Colours, Thickness, Rates) are grouped under the `/master_data` root collection, ensuring a consistent security posture (read-only for all authenticated users, write for 'Owner' role only).\n*   **User Data:** User profiles are isolated in `/user_profiles/{userId}`.\n*   **Transactional Data:** Customers and Invoices are in their own top-level collections, with invoice items and section items as subcollections, maintaining clear ownership and scope.\n*   **Application Settings:** A singleton document `/app_settings/config` holds global configurations, accessible by authenticated users for read, and 'Owner' for write.\n\n**Access Modeling:**\n*   **Path-Based Ownership:** `user_profiles/{userId}` directly links the document to the authenticated user's ID.\n*   **Hierarchical Paths for Related Data:** `invoices/{invoiceId}/items/{invoiceItemId}/sections/{invoiceSectionItemId}` clearly defines the relationships and provides logical grouping for queries.\n*   **DBAC (Database Access Control):** Global roles are handled by existence checks in `/roles_owner/{userId}` and `/roles_staff/{userId}`. For data items like invoices, access is governed by the `createdByUserId` field in conjunction with these global roles.\n\n**Data Clarity and Predictability:**\n*   Consistent naming conventions (`userId`, `invoiceId`, `sectionId`) and descriptive wildcards are used throughout. The `status` field in `Invoice` explicitly models its lifecycle.\n\nThis design ensures that data access is predictable and highly secure, minimizing the risk of authorization bypasses and simplifying the implementation of robust Firestore security rules."
   }
 }
