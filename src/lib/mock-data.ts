@@ -1,11 +1,9 @@
 import { Section, Colour, Thickness, Rate, GlassType, HardwareItem } from './types';
 
 export const mockSections: Section[] = [
-  // DC Series (1.2mm) - Only DC26 and DC30 have default formulas now as examples
-  { id: 'dc26', name: 'DC26 (1.2mm)', type: 'Sliding', top_formula: 'Width + 0', bottom_formula: 'Width + 0', side_formula: 'Height + 0', weight_per_ft: 0.45, rates: { dull: 674, champagne: 676, white_black: 723 } },
-  { id: 'dc30', name: 'DC30 (1.2mm)', type: 'Sliding', top_formula: 'Width + 0', bottom_formula: 'Width + 0', side_formula: 'Height + 0', weight_per_ft: 0.40, rates: { dull: 593, champagne: 595, white_black: 637 } },
-  
-  // Others set to 'None' so they don't show until user configures them
+  // DC Series (1.2mm)
+  { id: 'dc26', name: 'DC26 (1.2mm)', type: 'Sliding', top_formula: 'None', bottom_formula: 'None', side_formula: 'None', weight_per_ft: 0.45, rates: { dull: 674, champagne: 676, white_black: 723 } },
+  { id: 'dc30', name: 'DC30 (1.2mm)', type: 'Sliding', top_formula: 'None', bottom_formula: 'None', side_formula: 'None', weight_per_ft: 0.40, rates: { dull: 593, champagne: 595, white_black: 637 } },
   { id: 'dc26e', name: 'DC26E (1.2mm)', type: 'Sliding', top_formula: 'None', bottom_formula: 'None', side_formula: 'None', weight_per_ft: 0.46, rates: { dull: 693, champagne: 695, white_black: 744 } },
   { id: 'dc30e', name: 'DC30E (1.2mm)', type: 'Sliding', top_formula: 'None', bottom_formula: 'None', side_formula: 'None', weight_per_ft: 0.40, rates: { dull: 593, champagne: 595, white_black: 637 } },
   { id: 'dc26a', name: 'DC26A (1.2mm)', type: 'Sliding', top_formula: 'None', bottom_formula: 'None', side_formula: 'None', weight_per_ft: 0.48, rates: { dull: 732, champagne: 734, white_black: 785 } },
