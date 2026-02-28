@@ -47,7 +47,7 @@ export default function FormulasPage() {
     if (currentSection) {
       const parseFormula = (f: string | undefined) => {
         if (!f || f === 'None') return { variable: "None", operator: "+", constant: "0" }
-        const parts = f.split(' ')
+        const parts = f.split(/\s+/)
         if (parts.length < 3) return { variable: "None", operator: "+", constant: "0" }
         return { variable: parts[0], operator: parts[1], constant: parts[2] }
       }
@@ -121,13 +121,14 @@ export default function FormulasPage() {
           />
 
           <div className="ml-auto px-3 py-1.5 bg-accent/5 border border-accent/10 rounded font-mono text-xs text-accent">
-            {state.variable === 'None' ? '---' : 'LOCKED'}
+            {state.variable === 'None' ? '---' : 'ACTIVE'}
           </div>
         </div>
       </div>
     )
   }
 
+  // List of sections that have active formulas (Locked Status)
   const configuredSections = sections?.filter(s => 
     (s.top_formula && s.top_formula !== 'None') || 
     (s.bottom_formula && s.bottom_formula !== 'None') || 

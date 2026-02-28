@@ -39,6 +39,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
+  // Strict Filter: Only show sections that have an active formula
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -61,18 +62,20 @@ export default function NewOrderPage() {
   const evaluateFormula = (formula: string | undefined, w: number, h: number): number => {
     try {
       if (!formula || formula === 'None') return 0
-      const parts = formula.split(' ')
+      const parts = formula.split(/\s+/) // Robust split by any whitespace
       if (parts.length < 3) return 0
       
       const variableValue = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0
       const op = parts[1]
       const val = parseFloat(parts[2]) || 0
       
-      if (op === '+') return variableValue + val
-      if (op === '-') return variableValue - val
-      if (op === '*') return variableValue * val
-      if (op === '/') return val !== 0 ? variableValue / val : 0
-      return 0
+      let result = 0
+      if (op === '+') result = variableValue + val
+      else if (op === '-') result = variableValue - val
+      else if (op === '*') result = variableValue * val
+      else if (op === '/') result = val !== 0 ? variableValue / val : 0
+      
+      return isNaN(result) ? 0 : result
     } catch { return 0 }
   }
 
@@ -87,6 +90,7 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
+      // Standard frame logic: Top + Bottom + 2 Sides
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -100,6 +104,7 @@ export default function NewOrderPage() {
     })
   }, [width, height, qty, configuredSections, showResults])
 
+  // Calculation based on first available profile for grand total reference
   const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
@@ -201,7 +206,7 @@ export default function NewOrderPage() {
                   <AlertTriangle className="h-8 w-8" />
                   <p className="text-sm font-black uppercase text-center">
                     Attention: No formulas added!<br/>
-                    <span className="text-[10px] opacity-70">Please add logic in Inventory &gt; Formula Builder to see sections here.</span>
+                    <span className="text-[10px] opacity-70">Please add logic in Inventory &gt; Formulas first.</span>
                   </p>
                 </div>
               )}
