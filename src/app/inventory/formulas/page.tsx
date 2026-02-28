@@ -158,95 +158,99 @@ export default function FormulasPage() {
           </h1>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 space-y-6 max-w-4xl">
-          <div className="grid gap-6 md:grid-cols-3">
-            <Card className="md:col-span-2 border-none shadow-xl">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>Logic Builder</CardTitle>
-                    <CardDescription>Configure rules for selected profiles.</CardDescription>
-                  </div>
-                  <Tabs value={activeType} onValueChange={(v: any) => setActiveType(v)}>
-                    <TabsList>
-                      <TabsTrigger value="Sliding">Sliding</TabsTrigger>
-                      <TabsTrigger value="Fixed">Fixed</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
+        <main className="flex-1 p-4 md:p-6 space-y-8 max-w-4xl mx-auto">
+          {/* Top Section: Logic Builder */}
+          <Card className="border-none shadow-xl overflow-hidden">
+            <CardHeader className="pb-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-lg">Logic Builder</CardTitle>
+                  <CardDescription>Configure rules for selected profiles.</CardDescription>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Profile to Configure</Label>
-                  <Select value={selectedSectionId || ""} onValueChange={setSelectedSectionId}>
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder={loading ? "Loading..." : "Select Profile"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sections?.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Tabs value={activeType} onValueChange={(v: any) => setActiveType(v)}>
+                  <TabsList className="bg-muted/50">
+                    <TabsTrigger value="Sliding">Sliding</TabsTrigger>
+                    <TabsTrigger value="Fixed">Fixed</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase text-muted-foreground tracking-widest">Select Profile to Configure</Label>
+                <Select value={selectedSectionId || ""} onValueChange={setSelectedSectionId}>
+                  <SelectTrigger className="h-12 text-base font-bold bg-muted/20">
+                    <SelectValue placeholder={loading ? "Loading..." : "Select Profile"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sections?.map(s => (
+                      <SelectItem key={s.id} value={s.id} className="font-medium">{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="grid gap-4">
-                  <FormulaRow label="Top Frame" state={topFormula} setState={setTopFormula} />
-                  <FormulaRow label="Bottom Frame" state={bottomFormula} setState={setBottomFormula} />
-                  <FormulaRow label="Side Frames (x2)" state={sideFormula} setState={setSideFormula} />
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between border-t p-6 bg-muted/10">
-                <Button variant="ghost" size="sm" className="gap-2" onClick={() => {
-                  setTopFormula({ variable: "Width", operator: "+", constant: "0" })
-                  setBottomFormula({ variable: "Width", operator: "+", constant: "0" })
-                  setSideFormula({ variable: "Height", operator: "+", constant: "0" })
-                }}>
-                  <RefreshCcw className="h-3 w-3" /> Reset UI
-                </Button>
-                <Button onClick={handleSave} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 px-8">
-                  <Save className="h-4 w-4" /> Save Logic
-                </Button>
-              </CardFooter>
-            </Card>
+              <div className="grid gap-4">
+                <FormulaRow label="Top Frame" state={topFormula} setState={setTopFormula} />
+                <FormulaRow label="Bottom Frame" state={bottomFormula} setState={setBottomFormula} />
+                <FormulaRow label="Side Frames (x2)" state={sideFormula} setState={setSideFormula} />
+              </div>
+            </CardContent>
+            <CardFooter className="flex justify-between border-t p-6 bg-muted/10">
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" onClick={() => {
+                setTopFormula({ variable: "Width", operator: "+", constant: "0" })
+                setBottomFormula({ variable: "Width", operator: "+", constant: "0" })
+                setSideFormula({ variable: "Height", operator: "+", constant: "0" })
+              }}>
+                <RefreshCcw className="h-3 w-3" /> Reset UI
+              </Button>
+              <Button onClick={handleSave} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 px-8 font-bold shadow-lg">
+                <Save className="h-4 w-4" /> SAVE LOGIC
+              </Button>
+            </CardFooter>
+          </Card>
 
-            <Card className="border-none shadow-lg bg-card">
-              <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="h-[400px]">
-                  <div className="p-4 space-y-3">
-                    {configuredSections.length === 0 ? (
-                      <div className="text-center py-8 opacity-40">
-                        <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-destructive" />
-                        <p className="text-xs font-bold">No active formulas.</p>
-                      </div>
-                    ) : (
-                      configuredSections.map(s => (
-                        <div key={s.id} className="p-3 bg-muted/20 rounded-lg border border-border/50 flex items-center justify-between group">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-3 w-3 text-green-500" />
-                            <span className="font-bold text-accent text-xs">{s.name}</span>
+          {/* Bottom Section: Active Profiles List */}
+          <Card className="border-none shadow-lg bg-card overflow-hidden">
+            <CardHeader className="bg-muted/30 border-b">
+              <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles (Formula Set)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[300px]">
+                <div className="p-6">
+                  {configuredSections.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-40">
+                      <AlertTriangle className="h-12 w-12 mb-4" />
+                      <p className="text-sm font-bold uppercase tracking-tight">No active formulas found.</p>
+                      <p className="text-xs mt-1">Configure a profile above to see it here.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {configuredSections.map(s => (
+                        <div key={s.id} className="p-4 bg-muted/20 rounded-xl border border-border/50 flex items-center justify-between group hover:bg-accent/5 hover:border-accent/20 transition-all">
+                          <div className="flex items-center gap-3">
+                            <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                            <span className="font-black text-accent text-sm tracking-tight">{s.name}</span>
                           </div>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                            className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full"
                             onClick={() => handleDeleteFormula(s.id)}
+                            title="Delete Logic"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      ))
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </main>
       </SidebarInset>
     </SidebarProvider>
