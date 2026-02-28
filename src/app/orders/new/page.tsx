@@ -207,7 +207,7 @@ export default function NewOrderPage() {
               {configuredSections.length === 0 && (
                 <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
                   <AlertTriangle className="h-4 w-4" />
-                  <p className="text-xs font-bold">No profile formulas set. Go to Inventory > Formulas first.</p>
+                  <p className="text-xs font-bold">No profile formulas set. Go to Inventory &gt; Formulas first.</p>
                 </div>
               )}
 
