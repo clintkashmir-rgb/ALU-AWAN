@@ -13,7 +13,8 @@ import {
   Boxes,
   Palette,
   Layers,
-  CircleDollarSign
+  CircleDollarSign,
+  Calculator
 } from "lucide-react"
 
 import {
@@ -38,6 +39,7 @@ const menuItems = [
 
 const inventoryItems = [
   { icon: Layers, label: "Sections", href: "/inventory/sections" },
+  { icon: Calculator, label: "Formulas", href: "/inventory/formulas" },
   { icon: Palette, label: "Colours", href: "/inventory/colours" },
   { icon: Boxes, label: "Thickness", href: "/inventory/thickness" },
   { icon: CircleDollarSign, label: "Rates", href: "/inventory/rates" },
