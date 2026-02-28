@@ -231,8 +231,8 @@ export default function NewOrderPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W × H × Q = Total Sqft</span>
-                      <span className="text-xl font-black text-accent">{width} × {height} × {qty} = {glassSqFt} Sqft</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W &times; H &times; Q = Total Sqft</span>
+                      <span className="text-xl font-black text-accent">{width} &times; {height} &times; {qty} = {glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
