@@ -6,4 +6,8 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
   }
-}
+}TaONipJ-PBqFRYj5i7nBQAM",
+  authDomain: "studio-5816171861-9dff2.firebaseapp.com",
+  databaseURL: "https://studio-5816171861-9dff2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "studio-5816171861-9dff2",
+  storageBucket: "studio-5816171861-9dff2.firebasestorage.

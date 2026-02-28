@@ -73,8 +73,8 @@ export default function FormulasPage() {
     updateDocumentNonBlocking(doc(firestore, "sections", selectedSectionId), updatedData);
     
     toast({ 
-      title: "Logic Saved Online", 
-      description: `Formula updated for ${currentSection.name}.` 
+      title: "Logic Saved", 
+      description: `Formula updated for ${currentSection.name}. This profile will now show in New Order.` 
     })
   }
 
@@ -86,7 +86,7 @@ export default function FormulasPage() {
       side_formula: 'None',
       updatedAt: new Date().toISOString()
     });
-    toast({ title: "Logic Reset", description: "All formula parts set to None." });
+    toast({ title: "Logic Reset", description: "All formula parts set to None. This profile will no longer show in New Order." });
   }
 
   const FormulaRow = ({ label, state, setState }: any) => {
@@ -163,7 +163,7 @@ export default function FormulasPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle>Logic Builder</CardTitle>
-                    <CardDescription>Configure calculation rules for the selected profile.</CardDescription>
+                    <CardDescription>Configure calculation rules. Profiles without formulas won't show in orders.</CardDescription>
                   </div>
                   <Tabs value={activeType} onValueChange={(v: any) => setActiveType(v)}>
                     <TabsList>
@@ -219,8 +219,8 @@ export default function FormulasPage() {
                   <div className="p-4 space-y-3">
                     {configuredSections.length === 0 ? (
                       <div className="text-center py-8 opacity-40">
-                        <Calculator className="h-8 w-8 mx-auto mb-2" />
-                        <p className="text-xs">No active formulas.</p>
+                        <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-destructive" />
+                        <p className="text-xs font-bold">No active formulas.</p>
                       </div>
                     ) : (
                       configuredSections.map(s => (

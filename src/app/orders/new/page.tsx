@@ -88,8 +88,6 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
-      // Calculate total ft based on specific formulas for this section
-      // Top + Bottom + (2 * Side)
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -147,8 +145,8 @@ export default function NewOrderPage() {
 
     addDocumentNonBlocking(collection(firestore, "invoices"), orderData);
     
-    toast({ title: "Order Saved Online", description: "Data synced to your Dashboard and History." });
-    router.push("/invoices");
+    toast({ title: "Order Saved Online", description: "Data synced to your Dashboard." });
+    router.push("/");
   }
 
   return (
@@ -200,9 +198,12 @@ export default function NewOrderPage() {
               </div>
 
               {configuredSections.length === 0 && (
-                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <p className="text-xs font-bold">No profile formulas set. Go to Inventory &gt; Formulas first.</p>
+                <div className="p-4 bg-destructive/10 border-2 border-dashed border-destructive/30 rounded-xl flex flex-col items-center justify-center gap-3 text-destructive animate-pulse">
+                  <AlertTriangle className="h-8 w-8" />
+                  <p className="text-sm font-black uppercase text-center">
+                    Attention: No formulas added!<br/>
+                    <span className="text-[10px] opacity-70">Please add logic in Inventory &gt; Formula Builder to see sections here.</span>
+                  </p>
                 </div>
               )}
 
@@ -216,7 +217,7 @@ export default function NewOrderPage() {
             </CardContent>
           </Card>
 
-          {showResults && (
+          {showResults && configuredSections.length > 0 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="border-none shadow-lg bg-white overflow-hidden p-6 flex items-center justify-center">
@@ -250,7 +251,7 @@ export default function NewOrderPage() {
 
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison (Formula Based)</CardTitle>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison (Strict Formula Mode)</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
@@ -263,18 +264,14 @@ export default function NewOrderPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {comparisonData.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No configured profiles found with active formulas.</TableCell></TableRow>
-                      ) : (
-                        comparisonData.map(s => (
-                          <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
-                            <TableCell className="font-black text-accent">{s.name}</TableCell>
-                            <TableCell className="text-right font-mono font-bold">{s.totalFt} ft</TableCell>
-                            <TableCell className="text-right text-xs opacity-70">PKR {s.rate}</TableCell>
-                            <TableCell className="text-right font-black text-xl">PKR {s.amount.toLocaleString()}</TableCell>
-                          </TableRow>
-                        ))
-                      )}
+                      {comparisonData.map(s => (
+                        <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
+                          <TableCell className="font-black text-accent">{s.name}</TableCell>
+                          <TableCell className="text-right font-mono font-bold">{s.totalFt} ft</TableCell>
+                          <TableCell className="text-right text-xs opacity-70">PKR {s.rate}</TableCell>
+                          <TableCell className="text-right font-black text-xl">PKR {s.amount.toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </CardContent>
