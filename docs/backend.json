@@ -1,0 +1,47 @@
+
+{
+  "entities": {
+    "Section": {
+      "title": "Section",
+      "description": "Aluminum section profile details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["Sliding", "Fixed", "Both"] },
+        "top_formula": { "type": "string" },
+        "bottom_formula": { "type": "string" },
+        "side_formula": { "type": "string" },
+        "weight_per_ft": { "type": "number" },
+        "rate_per_ft": { "type": "number" }
+      },
+      "required": ["name", "type"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer window order or quote",
+      "type": "object",
+      "properties": {
+        "customerName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "items": { "type": "array" },
+        "grossAmount": { "type": "number" },
+        "discount": { "type": "number" },
+        "netAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["Draft", "Sent", "Paid"] }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/sections/{sectionId}": {
+      "schema": { "$ref": "#/backend/entities/Section" },
+      "description": "Collection of aluminum section profiles"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/backend/entities/Order" },
+      "description": "Collection of customer orders"
+    }
+  }
+}
