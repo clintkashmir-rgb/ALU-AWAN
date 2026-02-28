@@ -10,36 +10,45 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calculator, Save, RefreshCcw, Info, LayoutGrid, CheckCircle2, Sparkles } from "lucide-react"
-import { mockSections } from "@/lib/mock-data"
+import { Calculator, Save, RefreshCcw, Info, LayoutGrid, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase"
+import { collection, doc } from "firebase/firestore"
+import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates"
+import { Section } from "@/lib/types"
 
 export default function FormulasPage() {
   const { toast } = useToast()
-  const [sections, setSections] = React.useState(mockSections)
-  const [selectedSectionId, setSelectedSectionId] = React.useState(mockSections[0].id)
+  const firestore = useFirestore()
+  
+  const sectionsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "sections");
+  }, [firestore]);
+
+  const { data: sections, isLoading: loading } = useCollection<Section>(sectionsQuery);
+  const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null)
   const [activeType, setActiveType] = React.useState<'Sliding' | 'Fixed'>('Sliding')
   
-  // Load from LocalStorage on mount
-  React.useEffect(() => {
-    const saved = localStorage.getItem('awan_sections')
-    if (saved) {
-      setSections(JSON.parse(saved))
-    }
-  }, [])
-
-  const currentSection = sections.find(s => s.id === selectedSectionId)
+  const currentSection = sections?.find(s => s.id === selectedSectionId)
   
   const [topFormula, setTopFormula] = React.useState({ variable: "Width", operator: "+", constant: "0" })
   const [bottomFormula, setBottomFormula] = React.useState({ variable: "Width", operator: "+", constant: "0" })
   const [sideFormula, setSideFormula] = React.useState({ variable: "Height", operator: "+", constant: "0" })
 
+  // Select first section by default
+  React.useEffect(() => {
+    if (sections && sections.length > 0 && !selectedSectionId) {
+      setSelectedSectionId(sections[0].id)
+    }
+  }, [sections, selectedSectionId])
+
   // Initialize formulas when section changes
   React.useEffect(() => {
     if (currentSection) {
-      const parseFormula = (f: string) => {
+      const parseFormula = (f: string | undefined) => {
         if (!f || f === 'None') return { variable: "None", operator: "+", constant: "0" }
         const parts = f.split(' ')
         if (parts.length < 3) return { variable: "None", operator: "+", constant: "0" }
@@ -49,34 +58,31 @@ export default function FormulasPage() {
       setBottomFormula(parseFormula(currentSection.bottom_formula))
       setSideFormula(parseFormula(currentSection.side_formula))
     }
-  }, [selectedSectionId, sections])
+  }, [selectedSectionId, currentSection])
 
   const handleSave = () => {
+    if (!firestore || !selectedSectionId || !currentSection) return;
+
     const formatStr = (state: any) => 
       state.variable === 'None' ? 'None' : `${state.variable} ${state.operator} ${state.constant || '0'}`
 
-    const updatedSections = sections.map(s => {
-      if (s.id === selectedSectionId) {
-        return {
-          ...s,
-          top_formula: formatStr(topFormula),
-          bottom_formula: formatStr(bottomFormula),
-          side_formula: formatStr(sideFormula)
-        }
-      }
-      return s
-    })
+    const updatedData = {
+      top_formula: formatStr(topFormula),
+      bottom_formula: formatStr(bottomFormula),
+      side_formula: formatStr(sideFormula),
+      updatedAt: new Date().toISOString()
+    }
 
-    setSections(updatedSections)
-    localStorage.setItem('awan_sections', JSON.stringify(updatedSections))
+    updateDocumentNonBlocking(doc(firestore, "sections", selectedSectionId), updatedData);
+    
     toast({ 
-      title: "Logic Saved", 
-      description: `Formula updated for ${currentSection?.name}. This will now work in New Orders.` 
+      title: "Logic Saved Online", 
+      description: `Formula updated for ${currentSection.name}. This is now synced everywhere.` 
     })
   }
 
   const FormulaRow = ({ label, state, setState }: any) => {
-    const isExcluded = state.variable === "None" || (state.operator === "*" && state.constant === "0")
+    const isExcluded = state.variable === "None"
     
     return (
       <div className={`space-y-3 p-4 border rounded-lg transition-all ${isExcluded ? 'bg-muted/30 opacity-50 grayscale' : 'bg-card shadow-sm'}`}>
@@ -110,6 +116,7 @@ export default function FormulasPage() {
 
           <Input 
             type="number" 
+            step="any"
             className="w-[90px] h-9" 
             value={state.constant} 
             onChange={(e) => setState({ ...state, constant: e.target.value })} 
@@ -124,9 +131,11 @@ export default function FormulasPage() {
     )
   }
 
-  const configuredSections = sections.filter(s => 
-    s.top_formula !== 'None' || s.bottom_formula !== 'None' || s.side_formula !== 'None'
-  )
+  const configuredSections = sections?.filter(s => 
+    (s.top_formula && s.top_formula !== 'None') || 
+    (s.bottom_formula && s.bottom_formula !== 'None') || 
+    (s.side_formula && s.side_formula !== 'None')
+  ) || []
 
   return (
     <SidebarProvider>
@@ -159,12 +168,12 @@ export default function FormulasPage() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Profile to Configure</Label>
-                  <Select value={selectedSectionId} onValueChange={setSelectedSectionId}>
+                  <Select value={selectedSectionId || ""} onValueChange={setSelectedSectionId}>
                     <SelectTrigger className="h-12">
-                      <SelectValue />
+                      <SelectValue placeholder={loading ? "Loading..." : "Select Profile"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {sections.map(s => (
+                      {sections?.map(s => (
                         <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -209,7 +218,9 @@ export default function FormulasPage() {
               <CardContent className="p-0">
                 <ScrollArea className="h-[400px]">
                   <div className="p-4 space-y-3">
-                    {configuredSections.length === 0 ? (
+                    {loading ? (
+                      <div className="text-center py-8 opacity-40 text-xs">Syncing with database...</div>
+                    ) : configuredSections.length === 0 ? (
                       <div className="text-center py-8 opacity-40">
                         <Calculator className="h-8 w-8 mx-auto mb-2" />
                         <p className="text-xs">No active formulas.</p>

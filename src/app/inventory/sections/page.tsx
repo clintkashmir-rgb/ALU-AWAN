@@ -1,9 +1,10 @@
+
 "use client"
 
 import * as React from "react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,7 +25,6 @@ export default function SectionsPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   
-  // Memoized query to prevent unnecessary re-renders and errors
   const sectionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "sections");
@@ -35,9 +35,9 @@ export default function SectionsPage() {
   const [currentSection, setCurrentSection] = React.useState<Partial<Section>>({
     name: "",
     type: "Sliding",
-    top_formula: "Width + 0",
-    bottom_formula: "Width + 0",
-    side_formula: "Height + 0",
+    top_formula: "None",
+    bottom_formula: "None",
+    side_formula: "None",
     weight_per_ft: 0.4,
     rate_per_ft: 220
   })
@@ -62,13 +62,13 @@ export default function SectionsPage() {
     setCurrentSection({
       name: "",
       type: "Sliding",
-      top_formula: "Width + 0",
-      bottom_formula: "Width + 0",
-      side_formula: "Height + 0",
+      top_formula: "None",
+      bottom_formula: "None",
+      side_formula: "None",
       weight_per_ft: 0.4,
       rate_per_ft: 220
     })
-    toast({ title: "Section Added", description: `${currentSection.name} saved online.` })
+    toast({ title: "Section Added", description: `${currentSection.name} saved. Now configure its formula.` })
   }
 
   const handleDelete = (id: string) => {
@@ -118,41 +118,51 @@ export default function SectionsPage() {
                     <TableRow>
                       <TableHead>Profile Name</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Top Logic</TableHead>
-                      <TableHead>Side Logic</TableHead>
+                      <TableHead>Formula Status</TableHead>
                       <TableHead className="text-right">Rate (/ft)</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loading ? (
-                      <TableRow><TableCell colSpan={6} className="text-center py-12 opacity-50">Loading sections...</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-12 opacity-50">Loading sections...</TableCell></TableRow>
                     ) : filteredSections.length === 0 ? (
-                      <TableRow><TableCell colSpan={6} className="text-center py-12 opacity-50">No sections found. Add one to start.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-12 opacity-50">No sections found. Add one to start.</TableCell></TableRow>
                     ) : (
-                      filteredSections.map((section) => (
-                        <TableRow key={section.id}>
-                          <TableCell className="font-black text-accent">{section.name}</TableCell>
-                          <TableCell className="text-xs uppercase font-bold">{section.type}</TableCell>
-                          <TableCell className="font-mono text-xs opacity-70">{section.top_formula}</TableCell>
-                          <TableCell className="font-mono text-xs opacity-70">{section.side_formula}</TableCell>
-                          <TableCell className="text-right font-black">PKR {section.rate_per_ft}</TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem className="gap-2 text-destructive" onClick={() => handleDelete(section.id!)}>
-                                  <Trash2 className="h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      filteredSections.map((section) => {
+                        const hasFormula = (section.top_formula && section.top_formula !== 'None') || 
+                                          (section.bottom_formula && section.bottom_formula !== 'None') || 
+                                          (section.side_formula && section.side_formula !== 'None');
+                        
+                        return (
+                          <TableRow key={section.id}>
+                            <TableCell className="font-black text-accent">{section.name}</TableCell>
+                            <TableCell className="text-xs uppercase font-bold">{section.type}</TableCell>
+                            <TableCell>
+                              {hasFormula ? (
+                                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 text-[10px]">Active in Orders</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[10px] opacity-50">No Formula Set</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right font-black">PKR {section.rate_per_ft}</TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem className="gap-2 text-destructive" onClick={() => handleDelete(section.id!)}>
+                                    <Trash2 className="h-4 w-4" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
                     )}
                   </TableBody>
                 </Table>
@@ -166,7 +176,7 @@ export default function SectionsPage() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle className="uppercase font-black">New Section Profile</DialogTitle>
-              <DialogDescription>Add a new aluminum profile for calculations.</DialogDescription>
+              <DialogDescription>Add a new aluminum profile. Set formulas later to use in orders.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
@@ -176,11 +186,11 @@ export default function SectionsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Weight (kg/ft)</Label>
-                  <Input type="number" value={currentSection.weight_per_ft} onChange={e => setCurrentSection({...currentSection, weight_per_ft: parseFloat(e.target.value)})} />
+                  <Input type="number" step="any" value={currentSection.weight_per_ft} onChange={e => setCurrentSection({...currentSection, weight_per_ft: parseFloat(e.target.value)})} />
                 </div>
                 <div className="space-y-2">
                   <Label>Rate (PKR/ft)</Label>
-                  <Input type="number" value={currentSection.rate_per_ft} onChange={e => setCurrentSection({...currentSection, rate_per_ft: parseFloat(e.target.value)})} />
+                  <Input type="number" step="any" value={currentSection.rate_per_ft} onChange={e => setCurrentSection({...currentSection, rate_per_ft: parseFloat(e.target.value)})} />
                 </div>
               </div>
             </div>

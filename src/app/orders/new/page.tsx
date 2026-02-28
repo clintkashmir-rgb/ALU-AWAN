@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -39,7 +40,16 @@ export default function NewOrderPage() {
     return collection(firestore, "sections");
   }, [firestore]);
   
-  const { data: sections } = useCollection<Section>(sectionsQuery);
+  const { data: allSections } = useCollection<Section>(sectionsQuery);
+
+  // Filter sections that have at least one formula configured
+  const configuredSections = React.useMemo(() => {
+    return allSections?.filter(s => 
+      (s.top_formula && s.top_formula !== 'None') || 
+      (s.bottom_formula && s.bottom_formula !== 'None') || 
+      (s.side_formula && s.side_formula !== 'None')
+    ) || []
+  }, [allSections])
 
   // Calculations
   const glassSqFt = React.useMemo(() => {
@@ -53,47 +63,51 @@ export default function NewOrderPage() {
     return Math.round(glassSqFt * (parseFloat(glassRate) || 0))
   }, [glassSqFt, glassRate])
 
-  const evaluateFormula = (formula: string, w: number, h: number): number => {
+  const evaluateFormula = (formula: string | undefined, w: number, h: number): number => {
     try {
       if (!formula || formula === 'None') return 0
       const parts = formula.split(' ')
-      const variable = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0
+      if (parts.length < 3) return 0
+      
+      const variableValue = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0
       const op = parts[1]
       const val = parseFloat(parts[2]) || 0
-      if (op === '+') return variable + val
-      if (op === '-') return variable - val
-      if (op === '*') return variable * val
-      if (op === '/') return val !== 0 ? variable / val : 0
+      
+      if (op === '+') return variableValue + val
+      if (op === '-') return variableValue - val
+      if (op === '*') return variableValue * val
+      if (op === '/') return val !== 0 ? variableValue / val : 0
       return 0
     } catch { return 0 }
   }
 
   const comparisonData = React.useMemo(() => {
-    if (!showResults || !sections) return []
+    if (!showResults || !configuredSections) return []
     const w = parseFloat(width) || 0
     const h = parseFloat(height) || 0
     const q = parseInt(qty) || 0
 
-    return sections
-      .filter(s => (s.type === windowType || s.type === 'Both'))
-      .map(s => {
-        const top = evaluateFormula(s.top_formula || 'Width + 0', w, h)
-        const bottom = evaluateFormula(s.bottom_formula || 'Width + 0', w, h)
-        const side = evaluateFormula(s.side_formula || 'Height + 0', w, h)
-        const totalFt = (top + bottom + (2 * side)) * q
-        const rate = s.rate_per_ft || 220
-        return {
-          id: s.id,
-          name: s.name,
-          totalFt: parseFloat(totalFt.toFixed(2)),
-          rate: rate,
-          amount: Math.round(totalFt * rate)
-        }
-      })
-  }, [width, height, qty, sections, windowType, showResults])
+    return configuredSections.map(s => {
+      const top = evaluateFormula(s.top_formula, w, h)
+      const bottom = evaluateFormula(s.bottom_formula, w, h)
+      const side = evaluateFormula(s.side_formula, w, h)
+      
+      // Calculate total ft based on active pieces
+      // top + bottom + (2 * side)
+      const totalFt = (top + bottom + (2 * side)) * q
+      const rate = s.rate_per_ft || 220
+      
+      return {
+        id: s.id,
+        name: s.name,
+        totalFt: parseFloat(totalFt.toFixed(2)),
+        rate: rate,
+        amount: Math.round(totalFt * rate)
+      }
+    })
+  }, [width, height, qty, configuredSections, showResults])
 
-  const selectedProfileAmount = comparisonData[0]?.amount || 0
-  const grandTotal = Math.round((glassAmount + selectedProfileAmount) * (1 - discountPercent / 100))
+  const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
     if (!width || !height || !qty) {
@@ -168,11 +182,11 @@ export default function NewOrderPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Width (ft)</Label>
-                  <Input type="number" className="h-12 text-lg text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
+                  <Input type="number" step="any" className="h-12 text-lg text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Height (ft)</Label>
-                  <Input type="number" className="h-12 text-lg text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
+                  <Input type="number" step="any" className="h-12 text-lg text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Quantity (N)</Label>
@@ -222,7 +236,7 @@ export default function NewOrderPage() {
               {/* 4-Column Profile Comparison Table */}
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison</CardTitle>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison (Formula Based)</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
@@ -236,7 +250,7 @@ export default function NewOrderPage() {
                     </TableHeader>
                     <TableBody>
                       {comparisonData.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No matching profiles found.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No configured profiles found in Formula Builder.</TableCell></TableRow>
                       ) : (
                         comparisonData.map(s => (
                           <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
