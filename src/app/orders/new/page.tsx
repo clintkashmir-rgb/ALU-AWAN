@@ -61,8 +61,9 @@ export default function NewOrderPage() {
     }
   }
 
-  const calculateAllSections = (w: number, h: number, q: number, colour: Colour, hardwareCost: number) => {
+  const calculateAllSections = (w: number, h: number, q: number, colour: Colour, hardwareCost: number, windowType: 'Sliding' | 'Fixed') => {
     return mockSections
+      .filter(section => section.type === windowType || section.type === 'Both') // Filter by matching window type
       .map(section => {
         let frameRate = 220;
         if (section.rates && colour.category) {
@@ -81,8 +82,11 @@ export default function NewOrderPage() {
         const sideFt = evaluate(section.side_formula, w, h);
 
         const frameFtPerWindow = (topFt > 0 ? topFt : 0) + (bottomFt > 0 ? bottomFt : 0) + (2 * (sideFt > 0 ? sideFt : 0));
-        const totalFrameFt = frameFtPerWindow * q;
+        
+        // If the total frame length is 0, this section has no valid formulas configured
+        if (frameFtPerWindow <= 0) return null;
 
+        const totalFrameFt = frameFtPerWindow * q;
         const glassArea = Math.max(0, (w - (2 * deduction)) * (h - (2 * deduction))) * q
 
         const frameCost = totalFrameFt * frameRate
@@ -101,7 +105,7 @@ export default function NewOrderPage() {
           rateApplied: frameRate
         }
       })
-      .filter(calc => calc.frameFt > 0);
+      .filter((calc): calc is NonNullable<typeof calc> => calc !== null);
   }
 
   const addItem = () => {
@@ -115,13 +119,13 @@ export default function NewOrderPage() {
     const q = parseInt(formQty)
     const hwCost = parseFloat(manualHardwareCost) || 0
     
-    const comparisons = calculateAllSections(w, h, q, selectedColour, hwCost)
+    const comparisons = calculateAllSections(w, h, q, selectedColour, hwCost, formType)
     
     if (comparisons.length === 0) {
       toast({ 
         variant: "destructive", 
         title: "No Formula Found", 
-        description: "No sections have formulas configured for these dimensions." 
+        description: `No ${formType} sections have formulas configured for these dimensions.` 
       })
       return
     }
@@ -131,7 +135,7 @@ export default function NewOrderPage() {
     const newItem: WindowItem = {
       id: Math.random().toString(36).substr(2, 9),
       type: formType,
-      pallaQty: 2, // Defaulting as requested
+      pallaQty: 2,
       colour: selectedColour.name,
       glassType: mockGlassTypes.find(g => g.id === formGlassType)?.name || 'Standard',
       width: w,
@@ -264,7 +268,7 @@ export default function NewOrderPage() {
             <Card className="border-none shadow-lg w-full bg-muted/20">
               <CardHeader className="p-4">
                 <CardTitle className="text-sm">Order Items & Section Comparison</CardTitle>
-                <CardDescription className="text-xs">Auto-calculating bill for all compatible sections.</CardDescription>
+                <CardDescription className="text-xs">Only sections with configured formulas for {formType} are shown.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="w-full whitespace-nowrap">
@@ -281,7 +285,7 @@ export default function NewOrderPage() {
                     </TableHeader>
                     <TableBody>
                       {items.map((item) => {
-                        const activeComparisons = calculateAllSections(item.width, item.height, item.quantity, selectedColour, item.hardwareCost / item.quantity)
+                        const activeComparisons = calculateAllSections(item.width, item.height, item.quantity, selectedColour, item.hardwareCost / item.quantity, item.type)
                         return activeComparisons.map((comp, idx) => (
                           <TableRow key={`${item.id}-${idx}`} className="text-xs">
                             <TableCell className="font-bold">{comp.sectionName}</TableCell>
