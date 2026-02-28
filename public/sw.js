@@ -1,8 +1,12 @@
-
-self.addEventListener('install', function(event) {
-  console.log('Service Worker installed');
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
 });
 
-self.addEventListener('fetch', function(event) {
-  // Simple fetch handler for PWA requirements
+self.addEventListener('fetch', (event) => {
+  // basic offline support strategy
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
+  );
 });

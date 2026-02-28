@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -10,11 +9,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calculator, Save, CheckCircle, Sparkles, Ruler } from "lucide-react"
+import { Calculator, Save, CheckCircle, Ruler } from "lucide-react"
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { addDoc, collection, serverTimestamp } from "firebase/firestore"
+import { collection, serverTimestamp, doc } from "firebase/firestore"
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase"
+import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 import { useRouter } from "next/navigation"
 import { WindowDrawing } from "@/components/WindowDrawing"
 
@@ -32,7 +32,6 @@ export default function NewOrderPage() {
   const [windowType, setWindowType] = React.useState<'Sliding' | 'Fixed'>('Sliding')
   const [discountPercent, setDiscountPercent] = React.useState(0)
   const [showResults, setShowResults] = React.useState(false)
-  const [isSaving, setIsSaving] = React.useState(false)
 
   // Fetch sections from Firestore
   const sectionsQuery = useMemoFirebase(() => {
@@ -78,9 +77,9 @@ export default function NewOrderPage() {
     return sections
       .filter(s => (s.type === windowType || s.type === 'Both'))
       .map(s => {
-        const top = evaluateFormula(s.top_formula, w, h)
-        const bottom = evaluateFormula(s.bottom_formula, w, h)
-        const side = evaluateFormula(s.side_formula, w, h)
+        const top = evaluateFormula(s.top_formula || 'Width + 0', w, h)
+        const bottom = evaluateFormula(s.bottom_formula || 'Width + 0', w, h)
+        const side = evaluateFormula(s.side_formula || 'Height + 0', w, h)
         const totalFt = (top + bottom + (2 * side)) * q
         const rate = s.rate_per_ft || 220
         return {
@@ -104,37 +103,32 @@ export default function NewOrderPage() {
     setShowResults(true)
   }
 
-  const handleSaveOrder = async () => {
+  const handleSaveOrder = () => {
     if (!customerName) {
       toast({ variant: "destructive", title: "Missing Info", description: "Enter Customer Name." })
       return
     }
 
-    setIsSaving(true)
-    try {
-      if (!firestore) throw new Error("Firestore not initialized");
-      
-      await addDoc(collection(firestore, "invoices"), {
-        customerName,
-        date: new Date().toLocaleDateString(),
-        width: parseFloat(width),
-        height: parseFloat(height),
-        qty: parseInt(qty),
-        type: windowType,
-        glassSqFt,
-        glassAmount,
-        netAmount: grandTotal,
-        status: "Paid",
-        timestamp: serverTimestamp()
-      })
-      
-      toast({ title: "Order Saved", description: "Synched to online cloud." })
-      router.push("/invoices")
-    } catch (e: any) {
-      toast({ variant: "destructive", title: "Save Failed", description: e.message })
-    } finally {
-      setIsSaving(false)
-    }
+    if (!firestore) return;
+    
+    const orderData = {
+      customerName,
+      date: new Date().toLocaleDateString(),
+      width: parseFloat(width),
+      height: parseFloat(height),
+      qty: parseInt(qty),
+      type: windowType,
+      glassSqFt,
+      glassAmount,
+      netAmount: grandTotal,
+      status: "Paid",
+      timestamp: serverTimestamp()
+    };
+
+    addDocumentNonBlocking(collection(firestore, "invoices"), orderData);
+    
+    toast({ title: "Order Saved", description: "Syncing to online cloud..." });
+    router.push("/");
   }
 
   return (
@@ -149,7 +143,7 @@ export default function NewOrderPage() {
         </header>
 
         <main className="flex-1 p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
-          {/* Section 1: Dimensions */}
+          {/* Section 1: Dimensions Input */}
           <Card className="border-none shadow-xl">
             <CardHeader className="pb-4">
               <CardTitle className="text-sm font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
@@ -160,7 +154,7 @@ export default function NewOrderPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Customer Name</Label>
-                  <Input placeholder="Customer Name..." className="h-12 text-lg" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+                  <Input placeholder="Enter Name..." className="h-12 text-lg" value={customerName} onChange={e => setCustomerName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Type</Label>
@@ -173,11 +167,11 @@ export default function NewOrderPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Width (W-ft)</Label>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Width (ft)</Label>
                   <Input type="number" className="h-12 text-lg text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Height (H-ft)</Label>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Height (ft)</Label>
                   <Input type="number" className="h-12 text-lg text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
@@ -192,7 +186,7 @@ export default function NewOrderPage() {
             </CardContent>
           </Card>
 
-          {/* Section 2: Results (Shown only after OK) */}
+          {/* Section 2: Results Displayed only after OK */}
           {showResults && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -208,7 +202,7 @@ export default function NewOrderPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W × H × Q = Total</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W × H × Q = Total Sqft</span>
                       <span className="text-xl font-black text-accent">{width} × {height} × {qty} = {glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
@@ -225,9 +219,10 @@ export default function NewOrderPage() {
                 </Card>
               </div>
 
+              {/* 4-Column Profile Comparison Table */}
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Profile Comparison</CardTitle>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
@@ -241,7 +236,7 @@ export default function NewOrderPage() {
                     </TableHeader>
                     <TableBody>
                       {comparisonData.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">Setup profile formulas in Inventory to see results.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No matching profiles found.</TableCell></TableRow>
                       ) : (
                         comparisonData.map(s => (
                           <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
@@ -268,10 +263,9 @@ export default function NewOrderPage() {
                 </div>
                 <Button 
                   onClick={handleSaveOrder} 
-                  disabled={isSaving}
                   className="h-16 px-12 bg-primary text-primary-foreground hover:bg-primary/90 text-xl font-black rounded-xl shadow-xl gap-3"
                 >
-                  {isSaving ? "Syncing..." : <><Save className="h-6 w-6" /> SAVE ORDER</>}
+                  <Save className="h-6 w-6" /> SAVE ORDER
                 </Button>
               </div>
             </div>
