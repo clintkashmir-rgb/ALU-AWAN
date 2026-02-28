@@ -1,4 +1,3 @@
-
 "use client"
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -14,9 +13,10 @@ import React from "react";
 export default function DashboardPage() {
   const firestore = useFirestore();
   
-  const ordersQuery = useMemoFirebase(() => {
+  // Real-time listener for invoices
+  const invoicesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "invoices"), orderBy("timestamp", "desc"), limit(10));
+    return query(collection(firestore, "invoices"), orderBy("timestamp", "desc"));
   }, [firestore]);
 
   const sectionsQuery = useMemoFirebase(() => {
@@ -24,11 +24,11 @@ export default function DashboardPage() {
     return collection(firestore, "sections");
   }, [firestore]);
 
-  const { data: orders, isLoading: loadingOrders } = useCollection<any>(ordersQuery);
+  const { data: invoices, isLoading: loadingInvoices } = useCollection<any>(invoicesQuery);
   const { data: sections } = useCollection<any>(sectionsQuery);
 
-  const totalRevenue = orders?.reduce((sum, o) => sum + (o.netAmount || 0), 0) || 0;
-  const totalInvoices = orders?.length || 0;
+  const totalRevenue = invoices?.reduce((sum, o) => sum + (o.netAmount || 0), 0) || 0;
+  const totalInvoices = invoices?.length || 0;
   const totalSections = sections?.length || 0;
 
   const stats = [
@@ -37,6 +37,8 @@ export default function DashboardPage() {
     { label: "Profiles", value: totalSections, icon: Layers, color: "text-purple-500" },
     { label: "Active Orders", value: totalInvoices, icon: PlusCircle, color: "text-orange-500" },
   ];
+
+  const recentInvoices = invoices?.slice(0, 10) || [];
 
   return (
     <SidebarProvider>
@@ -66,19 +68,19 @@ export default function DashboardPage() {
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="col-span-1 md:col-span-2 border-none shadow-xl overflow-hidden">
               <CardHeader className="bg-muted/30">
-                <CardTitle className="text-sm font-bold uppercase tracking-tight">Recent Orders (Online Sync)</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-tight">Recent Invoices (Live Sync)</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {loadingOrders ? (
+                {loadingInvoices ? (
                   <div className="p-20 text-center opacity-30">Connecting to Firestore...</div>
-                ) : !orders || orders.length === 0 ? (
+                ) : recentInvoices.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-20">
                     <FileText className="h-16 w-16 mb-4" />
                     <p className="text-sm font-bold uppercase">No data found online.</p>
                   </div>
                 ) : (
                   <div className="divide-y">
-                    {orders.map((order: any) => (
+                    {recentInvoices.map((order: any) => (
                       <div key={order.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
                         <div className="space-y-1">
                           <p className="font-black text-accent">{order.customerName || "Walk-in Customer"}</p>

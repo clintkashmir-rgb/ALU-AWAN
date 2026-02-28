@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -25,7 +24,7 @@ export default function SectionsPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   
-  // Properly memoized Firestore query
+  // Memoized query to prevent unnecessary re-renders and errors
   const sectionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "sections");

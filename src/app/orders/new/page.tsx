@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Calculator, Save, CheckCircle, Ruler } from "lucide-react"
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { collection, serverTimestamp, doc } from "firebase/firestore"
+import { collection, serverTimestamp } from "firebase/firestore"
 import { useFirestore, useCollection, useMemoFirebase } from "@/firebase"
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 import { useRouter } from "next/navigation"
@@ -127,8 +127,8 @@ export default function NewOrderPage() {
 
     addDocumentNonBlocking(collection(firestore, "invoices"), orderData);
     
-    toast({ title: "Order Saved", description: "Syncing to online cloud..." });
-    router.push("/");
+    toast({ title: "Order Saved", description: "Data synced to your Dashboard." });
+    router.push("/invoices");
   }
 
   return (
