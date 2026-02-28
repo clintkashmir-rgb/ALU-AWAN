@@ -9,12 +9,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Trash2, Calculator, Ruler, Package } from "lucide-react"
+import { Plus, Trash2, Calculator, Ruler, Package, Printer, FileDown } from "lucide-react"
 import { WindowItem, Section, Colour } from "@/lib/types"
 import { mockSections, mockColours, mockGlassTypes } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import Link from "next/link"
+import { WindowDrawing } from "@/components/WindowDrawing"
 
 export default function NewOrderPage() {
   const { toast } = useToast()
@@ -92,7 +93,6 @@ export default function NewOrderPage() {
 
         const frameFtPerWindow = (topFt > 0 ? topFt : 0) + (bottomFt > 0 ? bottomFt : 0) + (2 * (sideFt > 0 ? sideFt : 0));
         
-        // If the total frame length is 0, this section has no valid formulas configured
         if (frameFtPerWindow <= 0) return null;
 
         const totalFrameFt = frameFtPerWindow * q;
@@ -111,7 +111,10 @@ export default function NewOrderPage() {
           frameCost: Math.round(frameCost),
           glassCost: Math.round(glassCost),
           hardwareCost: totalHardwareCost,
-          rateApplied: frameRate
+          rateApplied: frameRate,
+          topFt,
+          bottomFt,
+          sideFt
         }
       })
       .filter((calc): calc is NonNullable<typeof calc> => calc !== null);
@@ -166,6 +169,10 @@ export default function NewOrderPage() {
     toast({ title: "Item Added", description: "Window calculations added to list." })
   }
 
+  const handlePrint = () => {
+    window.print()
+  }
+
   const grossAmount = items.reduce((sum, item) => sum + item.totalCost, 0)
   const netAmount = Math.max(0, grossAmount * (1 - discountPercent / 100))
 
@@ -173,20 +180,37 @@ export default function NewOrderPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset className="overflow-x-hidden max-w-full">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10 w-full">
+        {/* Print Only Header */}
+        <div className="hidden print:block mb-8 text-center border-b pb-4">
+          <h1 className="text-3xl font-black text-primary">AWAN ALUMINUM</h1>
+          <p className="text-sm text-muted-foreground uppercase tracking-widest">Order Cutting & Specification Sheet</p>
+          <div className="flex justify-between mt-4 text-[10px] font-bold">
+            <span>DATE: {new Date().toLocaleDateString()}</span>
+            <span>ORDER ID: #AW-{Math.floor(Math.random() * 10000)}</span>
+          </div>
+        </div>
+
+        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10 w-full print:hidden">
           <div className="flex items-center gap-2">
             <SidebarTrigger />
             <h1 className="font-headline text-xl font-bold truncate">New Order</h1>
           </div>
-          <Button variant="outline" size="sm" className="gap-2 border-accent text-accent" asChild>
-            <Link href="/inventory/formulas">
-              <Calculator className="h-4 w-4" /> Formulas
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="gap-2 border-accent text-accent" asChild>
+              <Link href="/inventory/formulas">
+                <Calculator className="h-4 w-4" /> Formulas
+              </Link>
+            </Button>
+            {items.length > 0 && (
+              <Button size="sm" className="gap-2 bg-accent text-accent-foreground" onClick={handlePrint}>
+                <Printer className="h-4 w-4" /> Print Sheet
+              </Button>
+            )}
+          </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 space-y-6 pb-24 overflow-x-hidden w-full max-w-full">
-          <Card className="border-none shadow-lg w-full">
+        <main className="flex-1 p-4 md:p-6 space-y-6 pb-24 overflow-x-hidden w-full max-w-full print:p-0">
+          <Card className="border-none shadow-lg w-full print:hidden">
             <CardHeader className="p-4">
               <CardTitle className="text-md flex items-center gap-2">
                 <Ruler className="h-4 w-4 text-accent" /> Order Entry
@@ -260,9 +284,6 @@ export default function NewOrderPage() {
                     onChange={e => setManualHardwareCost(e.target.value)} 
                     placeholder="Enter manual hardware amount..." 
                   />
-                  <p className="text-[10px] text-muted-foreground italic">
-                    Note: This amount will be multiplied by the window quantity.
-                  </p>
                 </div>
               </div>
             </CardContent>
@@ -274,113 +295,143 @@ export default function NewOrderPage() {
           </Card>
 
           {items.length > 0 && (
-            <Card className="border-none shadow-lg w-full bg-muted/20">
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm">Order Items & Section Comparison</CardTitle>
-                <CardDescription className="text-xs">Showing active profiles for {formType}.</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                <ScrollArea className="w-full whitespace-nowrap">
-                  <Table>
-                    <TableHeader className="bg-muted">
-                      <TableRow>
-                        <TableHead>Profile</TableHead>
-                        <TableHead className="text-right">Qty</TableHead>
-                        <TableHead className="text-right">Frame (ft)</TableHead>
-                        <TableHead className="text-right">Glass (sqft)</TableHead>
-                        <TableHead className="text-right font-bold text-accent">Bill (PKR)</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((item) => {
-                        const activeComparisons = calculateAllSections(item.width, item.height, item.quantity, selectedColour, item.hardwareCost / item.quantity, item.type)
-                        return activeComparisons.map((comp, idx) => (
-                          <TableRow key={`${item.id}-${idx}`} className="text-xs">
-                            <TableCell className="font-bold">{comp.sectionName}</TableCell>
-                            <TableCell className="text-right">{item.quantity}</TableCell>
-                            <TableCell className="text-right">{comp.frameFt}</TableCell>
-                            <TableCell className="text-right">{comp.glassSqFt}</TableCell>
-                            <TableCell className="text-right font-black text-accent">{comp.totalCost.toLocaleString()}</TableCell>
-                            <TableCell className="text-right">
-                              {idx === 0 && (
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setItems(items.filter(i => i.id !== item.id))}>
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      })}
-                    </TableBody>
-                  </Table>
-                  <ScrollBar orientation="horizontal" />
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              {/* Printable Table with Drawings */}
+              <div className="print:block">
+                <h3 className="text-lg font-bold mb-4 hidden print:block">Order Specification Table</h3>
+                {items.map((item, idx) => {
+                  const activeComparisons = calculateAllSections(item.width, item.height, item.quantity, selectedColour, item.hardwareCost / item.quantity, item.type)
+                  
+                  return (
+                    <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 border p-4 rounded-lg bg-card shadow-sm mb-6 break-inside-avoid">
+                      <div className="md:col-span-1 flex items-center justify-center font-black text-2xl text-accent/20">
+                        {idx + 1}
+                      </div>
+                      <div className="md:col-span-3 flex justify-center">
+                        <WindowDrawing width={item.width} height={item.height} type={item.type} />
+                      </div>
+                      <div className="md:col-span-5 space-y-4">
+                        <div>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground">Specification</Label>
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-1 mt-1">
+                            <div className="flex justify-between border-b pb-1">
+                              <span className="text-xs">Width</span>
+                              <span className="text-xs font-bold">{item.width} ft</span>
+                            </div>
+                            <div className="flex justify-between border-b pb-1">
+                              <span className="text-xs">Height</span>
+                              <span className="text-xs font-bold">{item.height} ft</span>
+                            </div>
+                            <div className="flex justify-between border-b pb-1">
+                              <span className="text-xs">Quantity</span>
+                              <span className="text-xs font-bold">{item.quantity} units</span>
+                            </div>
+                            <div className="flex justify-between border-b pb-1">
+                              <span className="text-xs">Colour</span>
+                              <span className="text-xs font-bold">{item.colour}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label className="text-[10px] font-black uppercase text-muted-foreground">Cutting Details (Per Unit)</Label>
+                          <div className="space-y-2 mt-2">
+                             {activeComparisons.map((comp, cidx) => (
+                               <div key={cidx} className="bg-muted/30 p-2 rounded text-[11px] border border-border/50">
+                                 <p className="font-bold text-accent mb-1 underline">{comp.sectionName}</p>
+                                 <div className="grid grid-cols-3 gap-2">
+                                   <span>Top: <b>{comp.topFt} ft</b></span>
+                                   <span>Bottom: <b>{comp.bottomFt} ft</b></span>
+                                   <span>Sides (x2): <b>{comp.sideFt} ft</b></span>
+                                 </div>
+                               </div>
+                             ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="md:col-span-3 flex flex-col justify-end items-end space-y-2 print:hidden">
+                        <div className="text-right">
+                          <p className="text-[10px] text-muted-foreground uppercase font-black">Estimated Bill</p>
+                          <p className="text-xl font-black text-accent">PKR {item.totalCost.toLocaleString()}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="text-destructive h-8 w-8" onClick={() => setItems(items.filter(i => i.id !== item.id))}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
 
-          <div className="grid gap-6 md:grid-cols-2 w-full">
-             <Card className="border-none shadow-lg bg-accent/5">
-                <CardHeader className="p-4">
-                  <CardTitle className="text-md">Bill Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 p-4 pt-0">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground border-b pb-1">
-                      <span>Category</span>
-                      <span>Amount</span>
+          {items.length > 0 && (
+            <div className="grid gap-6 md:grid-cols-2 w-full print:mt-12">
+               <Card className="border-none shadow-lg bg-accent/5 break-inside-avoid">
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-md">Bill Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 p-4 pt-0">
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Frame Cost</span>
+                        <span className="font-medium">PKR {items.reduce((s, i) => s + i.frameCost, 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Glass Cost</span>
+                        <span className="font-medium">PKR {items.reduce((s, i) => s + i.glassCost, 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Hardware</span>
+                        <span className="font-medium">PKR {items.reduce((s, i) => s + i.hardwareCost, 0).toLocaleString()}</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Frame Cost</span>
-                      <span className="font-medium">PKR {items.reduce((s, i) => s + i.frameCost, 0).toLocaleString()}</span>
+                    <div className="pt-2 flex justify-between font-black text-lg border-t-2 border-dashed">
+                      <span>TOTAL</span>
+                      <span className="text-accent">PKR {grossAmount.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Glass Cost</span>
-                      <span className="font-medium">PKR {items.reduce((s, i) => s + i.glassCost, 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Hardware (Manual)</span>
-                      <span className="font-medium">PKR {items.reduce((s, i) => s + i.hardwareCost, 0).toLocaleString()}</span>
-                    </div>
-                  </div>
-                  <div className="pt-2 flex justify-between font-black text-lg border-t-2 border-dashed">
-                    <span>TOTAL</span>
-                    <span className="text-accent">PKR {grossAmount.toLocaleString()}</span>
-                  </div>
-                </CardContent>
-             </Card>
+                  </CardContent>
+               </Card>
 
-             <Card className="border-none shadow-lg">
-                <CardHeader className="p-4">
-                  <CardTitle className="text-md">Final Billing</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 p-4 pt-0">
-                  <div className="space-y-2">
-                    <Label className="text-xs">Discount (%)</Label>
-                    <Input 
-                      type="number" 
-                      className="h-11"
-                      value={discountPercent} 
-                      onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div className="bg-background p-4 rounded-lg border-2 border-accent/20">
-                    <span className="text-[10px] text-muted-foreground uppercase font-black">Net Payable</span>
-                    <p className="text-3xl font-black text-accent">PKR {netAmount.toLocaleString()}</p>
-                  </div>
-                </CardContent>
-             </Card>
+               <Card className="border-none shadow-lg break-inside-avoid print:bg-muted/10">
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-md">Final Billing</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4 p-4 pt-0">
+                    <div className="space-y-2 print:hidden">
+                      <Label className="text-xs">Discount (%)</Label>
+                      <Input 
+                        type="number" 
+                        className="h-11"
+                        value={discountPercent} 
+                        onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)}
+                      />
+                    </div>
+                    <div className="bg-background p-4 rounded-lg border-2 border-accent/20">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[10px] text-muted-foreground uppercase font-black">Net Payable</span>
+                        {discountPercent > 0 && <span className="text-[10px] text-green-500 font-bold">-{discountPercent}% OFF</span>}
+                      </div>
+                      <p className="text-3xl font-black text-accent">PKR {netAmount.toLocaleString()}</p>
+                    </div>
+                  </CardContent>
+               </Card>
+            </div>
+          )}
+
+          <div className="hidden print:block mt-12 pt-8 border-t text-center text-[10px] text-muted-foreground">
+            <p>Generated by Awan Aluminum Management System</p>
+            <p>Industrial Precision & Cutting Optimization</p>
           </div>
         </main>
 
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t p-4 flex justify-between items-center z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t p-4 flex justify-between items-center z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.2)] print:hidden">
           <div className="flex flex-col">
             <p className="text-[10px] text-muted-foreground font-bold">{items.length} Items</p>
             <p className="font-black text-accent text-xl leading-none">PKR {netAmount.toLocaleString()}</p>
           </div>
-          <Button size="lg" className="h-12 px-8 font-black bg-accent text-accent-foreground rounded-full">
-            SAVE ORDER
+          <Button size="lg" className="h-12 px-8 font-black bg-accent text-accent-foreground rounded-full" onClick={handlePrint}>
+            PRINT ORDER
           </Button>
         </div>
       </SidebarInset>
