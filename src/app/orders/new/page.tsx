@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -46,7 +47,12 @@ export default function NewOrderPage() {
       const parts = formula.split(' ');
       if (parts.length < 3) return 0;
       
-      const variable = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0;
+      const variableName = parts[0];
+      const variable = variableName === 'Width' ? w : variableName === 'Height' ? h : 0;
+      
+      // If variable is None, formula is invalid/skipped
+      if (variableName === 'None') return 0;
+
       const operator = parts[1];
       const constant = parseFloat(parts[2]);
 
@@ -61,53 +67,54 @@ export default function NewOrderPage() {
   }
 
   const calculateAllSections = (w: number, h: number, q: number, colour: Colour) => {
-    return mockSections.map(section => {
-      // Pick rate based on selected color category
-      let frameRate = 220;
-      if (section.rates && colour.category) {
-        frameRate = section.rates[colour.category] || 220;
-      } else if (section.rate_per_ft) {
-        frameRate = section.rate_per_ft;
-      }
+    return mockSections
+      .map(section => {
+        // Pick rate based on selected color category
+        let frameRate = 220;
+        if (section.rates && colour.category) {
+          frameRate = section.rates[colour.category] || 220;
+        } else if (section.rate_per_ft) {
+          frameRate = section.rate_per_ft;
+        }
 
-      const glassObj = mockGlassTypes.find(g => g.id === formGlassType)
-      const glassRate = glassObj?.rate_per_sqft || 120
+        const glassObj = mockGlassTypes.find(g => g.id === formGlassType)
+        const glassRate = glassObj?.rate_per_sqft || 120
 
-      // Frame deductions (0.1 ft per side = 0.2 ft total)
-      const deduction = 0.1
-      
-      const topFt = evaluate(section.top_formula, w, h);
-      const bottomFt = evaluate(section.bottom_formula, w, h);
-      const sideFt = evaluate(section.side_formula, w, h);
+        // Frame deductions (0.1 ft per side = 0.2 ft total)
+        const deduction = 0.1
+        
+        const topFt = evaluate(section.top_formula, w, h);
+        const bottomFt = evaluate(section.bottom_formula, w, h);
+        const sideFt = evaluate(section.side_formula, w, h);
 
-      // Total frame for 1 window = top + bottom + (2 * side)
-      // Results <= 0 are ignored
-      const frameFtPerWindow = (topFt > 0 ? topFt : 0) + (bottomFt > 0 ? bottomFt : 0) + (2 * (sideFt > 0 ? sideFt : 0));
-      const totalFrameFt = frameFtPerWindow * q;
+        // Total frame for 1 window = top + bottom + (2 * side)
+        const frameFtPerWindow = (topFt > 0 ? topFt : 0) + (bottomFt > 0 ? bottomFt : 0) + (2 * (sideFt > 0 ? sideFt : 0));
+        const totalFrameFt = frameFtPerWindow * q;
 
-      // Glass Area = (Width - 0.2) * (Height - 0.2)
-      const glassArea = Math.max(0, (w - (2 * deduction)) * (h - (2 * deduction))) * q
+        // Glass Area = (Width - 0.2) * (Height - 0.2)
+        const glassArea = Math.max(0, (w - (2 * deduction)) * (h - (2 * deduction))) * q
 
-      const hardwareCost = selectedHardware.reduce((acc, hid) => {
-        const hw = mockHardware.find(h => h.id === hid)
-        return acc + (hw?.rate || 0)
-      }, 0) * q
+        const hardwareCost = selectedHardware.reduce((acc, hid) => {
+          const hw = mockHardware.find(h => h.id === hid)
+          return acc + (hw?.rate || 0)
+        }, 0) * q
 
-      const frameCost = totalFrameFt * frameRate
-      const glassCost = glassArea * glassRate
+        const frameCost = totalFrameFt * frameRate
+        const glassCost = glassArea * glassRate
 
-      return {
-        sectionName: section.name,
-        sectionId: section.id,
-        frameFt: parseFloat(totalFrameFt.toFixed(2)),
-        glassSqFt: parseFloat(glassArea.toFixed(2)),
-        totalCost: Math.round(frameCost + glassCost + hardwareCost),
-        frameCost: Math.round(frameCost),
-        glassCost: Math.round(glassCost),
-        hardwareCost,
-        rateApplied: frameRate
-      }
-    })
+        return {
+          sectionName: section.name,
+          sectionId: section.id,
+          frameFt: parseFloat(totalFrameFt.toFixed(2)),
+          glassSqFt: parseFloat(glassArea.toFixed(2)),
+          totalCost: Math.round(frameCost + glassCost + hardwareCost),
+          frameCost: Math.round(frameCost),
+          glassCost: Math.round(glassCost),
+          hardwareCost,
+          rateApplied: frameRate
+        }
+      })
+      .filter(calc => calc.frameFt > 0); // CRITICAL: Only show sections where formulas are applied
   }
 
   const addItem = () => {
@@ -121,6 +128,16 @@ export default function NewOrderPage() {
     const q = parseInt(formQty)
     
     const comparisons = calculateAllSections(w, h, q, selectedColour)
+    
+    if (comparisons.length === 0) {
+      toast({ 
+        variant: "destructive", 
+        title: "No Formula Found", 
+        description: "No sections have formulas configured for these dimensions." 
+      })
+      return
+    }
+
     const defaultCalc = comparisons[0]
 
     const newItem: WindowItem = {
@@ -145,7 +162,7 @@ export default function NewOrderPage() {
     setFormWidth("")
     setFormHeight("")
     setSelectedHardware([])
-    toast({ title: "Calculated", description: "Bill generated based on profile logic." })
+    toast({ title: "Calculated", description: "Bill generated based on active profile formulas." })
   }
 
   const grossAmount = items.reduce((sum, item) => sum + item.totalCost, 0)
@@ -253,8 +270,8 @@ export default function NewOrderPage() {
           {items.length > 0 && (
             <Card className="border-none shadow-lg w-full bg-muted/20">
               <CardHeader className="p-4">
-                <CardTitle className="text-sm">Section Comparison (Auto Rates Applied)</CardTitle>
-                <CardDescription className="text-xs">Based on {selectedColour.name} rates.</CardDescription>
+                <CardTitle className="text-sm">Active Section Comparison</CardTitle>
+                <CardDescription className="text-xs">Only showing sections with configured formulas for {selectedColour.name}.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="w-full whitespace-nowrap">
@@ -269,8 +286,8 @@ export default function NewOrderPage() {
                     </TableHeader>
                     <TableBody>
                       {items.map((item) => {
-                        const comparisons = calculateAllSections(item.width, item.height, item.quantity, selectedColour)
-                        return comparisons.map((comp, idx) => (
+                        const activeComparisons = calculateAllSections(item.width, item.height, item.quantity, selectedColour)
+                        return activeComparisons.map((comp, idx) => (
                           <TableRow key={`${item.id}-${idx}`} className="text-xs">
                             <TableCell className="font-bold">{comp.sectionName}</TableCell>
                             <TableCell className="text-right text-muted-foreground">{comp.rateApplied}</TableCell>
