@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -73,7 +72,7 @@ export default function NewOrderPage() {
 
   const calculateAllSections = (w: number, h: number, q: number, colour: Colour, hardwareCost: number, windowType: 'Sliding' | 'Fixed') => {
     return sections
-      .filter(section => section.type === windowType || section.type === 'Both')
+      .filter(section => (section.type === windowType || section.type === 'Both') && (section.top_formula !== 'None' || section.bottom_formula !== 'None' || section.side_formula !== 'None'))
       .map(section => {
         let frameRate = 220;
         if (section.rates && colour.category) {
