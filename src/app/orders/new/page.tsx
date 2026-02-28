@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Trash2, Sparkles, Ruler, Package } from "lucide-react"
+import { Plus, Trash2, Calculator, Ruler, Package } from "lucide-react"
 import { WindowItem, Section, Colour } from "@/lib/types"
 import { mockSections, mockColours, mockGlassTypes } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
@@ -20,7 +21,16 @@ export default function NewOrderPage() {
   const { toast } = useToast()
   const [items, setItems] = React.useState<WindowItem[]>([])
   const [discountPercent, setDiscountPercent] = React.useState(0)
+  const [sections, setSections] = React.useState(mockSections)
   
+  // Load persisted sections from LocalStorage
+  React.useEffect(() => {
+    const saved = localStorage.getItem('awan_sections')
+    if (saved) {
+      setSections(JSON.parse(saved))
+    }
+  }, [])
+
   // Form State
   const [formType, setFormType] = React.useState<'Fixed' | 'Sliding'>('Sliding')
   const [formColourId, setFormColourId] = React.useState(mockColours[0].id)
@@ -62,8 +72,8 @@ export default function NewOrderPage() {
   }
 
   const calculateAllSections = (w: number, h: number, q: number, colour: Colour, hardwareCost: number, windowType: 'Sliding' | 'Fixed') => {
-    return mockSections
-      .filter(section => section.type === windowType || section.type === 'Both') // Filter by matching window type
+    return sections
+      .filter(section => section.type === windowType || section.type === 'Both')
       .map(section => {
         let frameRate = 220;
         if (section.rates && colour.category) {
@@ -110,7 +120,7 @@ export default function NewOrderPage() {
 
   const addItem = () => {
     if (!formWidth || !formHeight) {
-      toast({ variant: "destructive", title: "Error", description: "Width and Height are required." })
+      toast({ variant: "destructive", title: "Missing Input", description: "Width and Height are required." })
       return
     }
 
@@ -125,7 +135,7 @@ export default function NewOrderPage() {
       toast({ 
         variant: "destructive", 
         title: "No Formula Found", 
-        description: `No ${formType} sections have formulas configured for these dimensions.` 
+        description: `Configure formulas for ${formType} sections first.` 
       })
       return
     }
@@ -154,7 +164,7 @@ export default function NewOrderPage() {
     setFormWidth("")
     setFormHeight("")
     setManualHardwareCost("0")
-    toast({ title: "Item Added", description: "New window added to order." })
+    toast({ title: "Item Added", description: "Window calculations added to list." })
   }
 
   const grossAmount = items.reduce((sum, item) => sum + item.totalCost, 0)
@@ -171,7 +181,7 @@ export default function NewOrderPage() {
           </div>
           <Button variant="outline" size="sm" className="gap-2 border-accent text-accent" asChild>
             <Link href="/inventory/formulas">
-              <Sparkles className="h-4 w-4" /> Formulas
+              <Calculator className="h-4 w-4" /> Formulas
             </Link>
           </Button>
         </header>
@@ -268,7 +278,7 @@ export default function NewOrderPage() {
             <Card className="border-none shadow-lg w-full bg-muted/20">
               <CardHeader className="p-4">
                 <CardTitle className="text-sm">Order Items & Section Comparison</CardTitle>
-                <CardDescription className="text-xs">Only sections with configured formulas for {formType} are shown.</CardDescription>
+                <CardDescription className="text-xs">Showing active profiles for {formType}.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="w-full whitespace-nowrap">

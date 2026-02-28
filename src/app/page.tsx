@@ -1,8 +1,9 @@
+
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileText, TrendingUp, Users, Cpu, Layers } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, Users, Calculator, Layers } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -78,9 +79,9 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start gap-3 h-12" asChild>
-                  <Link href="/ai-tools">
-                    <Cpu className="h-5 w-5" />
-                    AI Formula Assistant
+                  <Link href="/inventory/formulas">
+                    <Calculator className="h-5 w-5" />
+                    Section Formula Builder
                   </Link>
                 </Button>
               </CardContent>

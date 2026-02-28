@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -9,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calculator, Save, RefreshCcw, Info, LayoutGrid, CheckCircle2 } from "lucide-react"
+import { Calculator, Save, RefreshCcw, Info, LayoutGrid, CheckCircle2, Sparkles } from "lucide-react"
 import { mockSections } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +22,14 @@ export default function FormulasPage() {
   const [selectedSectionId, setSelectedSectionId] = React.useState(mockSections[0].id)
   const [activeType, setActiveType] = React.useState<'Sliding' | 'Fixed'>('Sliding')
   
-  // Formula State for the selected section
+  // Load from LocalStorage on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem('awan_sections')
+    if (saved) {
+      setSections(JSON.parse(saved))
+    }
+  }, [])
+
   const currentSection = sections.find(s => s.id === selectedSectionId)
   
   const [topFormula, setTopFormula] = React.useState({ variable: "Width", operator: "+", constant: "0" })
@@ -34,6 +42,7 @@ export default function FormulasPage() {
       const parseFormula = (f: string) => {
         if (!f || f === 'None') return { variable: "None", operator: "+", constant: "0" }
         const parts = f.split(' ')
+        if (parts.length < 3) return { variable: "None", operator: "+", constant: "0" }
         return { variable: parts[0], operator: parts[1], constant: parts[2] }
       }
       setTopFormula(parseFormula(currentSection.top_formula))
@@ -59,9 +68,10 @@ export default function FormulasPage() {
     })
 
     setSections(updatedSections)
+    localStorage.setItem('awan_sections', JSON.stringify(updatedSections))
     toast({ 
-      title: "Logic Updated", 
-      description: `Formulas for ${currentSection?.name} have been saved.` 
+      title: "Logic Saved", 
+      description: `Formula updated for ${currentSection?.name}. This will now work in New Orders.` 
     })
   }
 

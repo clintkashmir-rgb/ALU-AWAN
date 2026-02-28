@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -9,7 +10,6 @@ import {
   FileText, 
   PlusCircle, 
   Settings, 
-  Cpu,
   Boxes,
   Palette,
   Layers,
@@ -34,7 +34,6 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: PlusCircle, label: "New Order", href: "/orders/new" },
   { icon: FileText, label: "Invoices", href: "/invoices" },
-  { icon: Cpu, label: "AI Tools", href: "/ai-tools" },
 ]
 
 const inventoryItems = [
