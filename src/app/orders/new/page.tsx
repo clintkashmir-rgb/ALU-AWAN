@@ -10,11 +10,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calculator, Save, CheckCircle, Printer } from "lucide-react"
+import { Calculator, Save, CheckCircle, Sparkles } from "lucide-react"
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { addDoc, collection } from "firebase/firestore"
-import { useFirestore, useCollection } from "@/firebase"
+import { addDoc, collection, serverTimestamp } from "firebase/firestore"
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase"
 import { useRouter } from "next/navigation"
 import { WindowDrawing } from "@/components/WindowDrawing"
 
@@ -35,9 +35,12 @@ export default function NewOrderPage() {
   const [isSaving, setIsSaving] = React.useState(false)
 
   // Fetch sections from Firestore
-  const { data: sections } = useCollection<Section>(
-    firestore ? collection(firestore, "sections") : null
-  )
+  const sectionsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "sections");
+  }, [firestore]);
+  
+  const { data: sections } = useCollection<Section>(sectionsQuery);
 
   // Calculations
   const glassSqFt = React.useMemo(() => {
@@ -102,12 +105,14 @@ export default function NewOrderPage() {
 
   const handleSaveOrder = async () => {
     if (!customerName) {
-      toast({ variant: "destructive", title: "Missing Info", description: "Customer name is required to save." })
+      toast({ variant: "destructive", title: "Missing Info", description: "Customer name is required." })
       return
     }
 
     setIsSaving(true)
     try {
+      if (!firestore) throw new Error("Firestore not initialized");
+      
       await addDoc(collection(firestore, "orders"), {
         customerName,
         date: new Date().toLocaleDateString(),
@@ -118,12 +123,13 @@ export default function NewOrderPage() {
         glassAmount,
         netAmount: grandTotal,
         status: "Paid",
-        timestamp: new Date()
+        timestamp: serverTimestamp()
       })
-      toast({ title: "Order Saved", description: "Invoice recorded successfully." })
+      
+      toast({ title: "Order Saved", description: "Data successfully synced online." })
       router.push("/invoices")
-    } catch (e) {
-      toast({ variant: "destructive", title: "Save Failed" })
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Save Failed", description: e.message })
     } finally {
       setIsSaving(false)
     }
@@ -144,17 +150,19 @@ export default function NewOrderPage() {
           {/* Section 1: Dimensions */}
           <Card className="border-none shadow-xl">
             <CardHeader className="pb-4">
-              <CardTitle className="text-sm font-black uppercase text-muted-foreground tracking-widest">1. Enter Dimensions</CardTitle>
+              <CardTitle className="text-sm font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-accent" /> 1. Dimensions Entry
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2 space-y-2">
-                  <Label className="text-xs font-bold uppercase">Customer Name</Label>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Customer Name</Label>
                   <Input placeholder="Enter customer name..." className="h-12 text-lg" value={customerName} onChange={e => setCustomerName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase">Window Type</Label>
-                  <Select value={windowType} onValueChange={(v: any) => setWindowType(v)}>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Type</Label>
+                  <Select value={windowType} onValueChange={(v: any) => { setWindowType(v); setShowResults(false); }}>
                     <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Sliding">Sliding Window</SelectItem>
@@ -163,15 +171,15 @@ export default function NewOrderPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase">Quantity (N)</Label>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Quantity (N)</Label>
                   <Input type="number" className="h-12 text-lg text-center font-bold" value={qty} onChange={e => { setQty(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase">Width (W - ft)</Label>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Width (W-ft)</Label>
                   <Input type="number" className="h-12 text-lg text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase">Height (H - ft)</Label>
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Height (H-ft)</Label>
                   <Input type="number" className="h-12 text-lg text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
                 </div>
               </div>
@@ -186,14 +194,10 @@ export default function NewOrderPage() {
           {showResults && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Drawing */}
-                <Card className="border-none shadow-lg bg-white overflow-hidden">
-                  <CardContent className="p-6">
-                    <WindowDrawing width={parseFloat(width)} height={parseFloat(height)} type={windowType} />
-                  </CardContent>
+                <Card className="border-none shadow-lg bg-white overflow-hidden p-6 flex items-center justify-center">
+                  <WindowDrawing width={parseFloat(width)} height={parseFloat(height)} type={windowType} />
                 </Card>
 
-                {/* Glass Calculation */}
                 <Card className="md:col-span-2 border-none shadow-lg bg-accent/5 border-2 border-dashed border-accent/20">
                   <CardHeader>
                     <CardTitle className="text-xs font-black uppercase text-accent tracking-widest flex items-center gap-2">
@@ -202,16 +206,16 @@ export default function NewOrderPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W × H × Q</span>
                       <span className="text-xl font-black text-accent">{width} × {height} × {qty} = {glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Glass Rate (PKR/Sqft)</Label>
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Rate (PKR/Sqft)</Label>
                         <Input type="number" className="h-12 text-xl font-black" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
                       </div>
                       <div className="text-right space-y-1">
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Total Glass Cost</Label>
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Glass Total</Label>
                         <div className="text-3xl font-black text-accent">PKR {glassAmount.toLocaleString()}</div>
                       </div>
                     </div>
@@ -219,16 +223,15 @@ export default function NewOrderPage() {
                 </Card>
               </div>
 
-              {/* Section Table (4 Columns) */}
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Profile Comparison</CardTitle>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Profile Comparison</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
-                        <TableHead className="font-bold">Profile Name</TableHead>
+                        <TableHead className="font-bold">Profile</TableHead>
                         <TableHead className="text-right font-bold">Total Ft</TableHead>
                         <TableHead className="text-right font-bold">Rate (/ft)</TableHead>
                         <TableHead className="text-right font-bold">Amount (PKR)</TableHead>
@@ -236,13 +239,13 @@ export default function NewOrderPage() {
                     </TableHeader>
                     <TableBody>
                       {comparisonData.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No formulas defined for {windowType} sections.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">Configure profile formulas in Inventory to see results.</TableCell></TableRow>
                       ) : (
                         comparisonData.map(s => (
                           <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
                             <TableCell className="font-black text-accent">{s.name}</TableCell>
                             <TableCell className="text-right font-mono font-bold">{s.totalFt} ft</TableCell>
-                            <TableCell className="text-right text-xs">PKR {s.rate}</TableCell>
+                            <TableCell className="text-right text-xs opacity-70">PKR {s.rate}</TableCell>
                             <TableCell className="text-right font-black text-xl">PKR {s.amount.toLocaleString()}</TableCell>
                           </TableRow>
                         ))
@@ -252,14 +255,13 @@ export default function NewOrderPage() {
                 </CardContent>
               </Card>
 
-              {/* Final Total and Save */}
               <div className="flex flex-col md:flex-row items-end justify-between bg-card p-6 rounded-2xl shadow-2xl border gap-6">
                 <div className="w-full md:w-48 space-y-2">
                   <Label className="text-[10px] uppercase font-black tracking-widest">Discount (%)</Label>
                   <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} className="h-12 text-xl font-bold" />
                 </div>
                 <div className="text-right space-y-1 flex-1">
-                  <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Grand Total Amount</p>
+                  <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Grand Total</p>
                   <h2 className="text-5xl font-black text-accent">PKR {grandTotal.toLocaleString()}</h2>
                 </div>
                 <Button 
@@ -267,7 +269,7 @@ export default function NewOrderPage() {
                   disabled={isSaving}
                   className="h-16 px-12 bg-primary text-primary-foreground hover:bg-primary/90 text-xl font-black rounded-xl shadow-xl gap-3"
                 >
-                  {isSaving ? "Saving..." : <><Save className="h-6 w-6" /> SAVE ORDER</>}
+                  {isSaving ? "Syncing..." : <><Save className="h-6 w-6" /> SAVE ORDER</>}
                 </Button>
               </div>
             </div>

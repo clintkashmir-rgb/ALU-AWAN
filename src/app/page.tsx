@@ -3,28 +3,28 @@
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, FileText, TrendingUp, Users, Calculator, Layers, LayoutDashboard } from "lucide-react";
+import { PlusCircle, FileText, TrendingUp, Layers, LayoutDashboard, Calculator } from "lucide-react";
 import Link from "next/link";
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit } from "firebase/firestore";
 import React from "react";
 
 export default function DashboardPage() {
   const firestore = useFirestore();
   
-  const ordersQuery = React.useMemo(() => {
+  const ordersQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "orders"), orderBy("timestamp", "desc"));
+    return query(collection(firestore, "orders"), orderBy("timestamp", "desc"), limit(10));
   }, [firestore]);
 
-  const sectionsQuery = React.useMemo(() => {
+  const sectionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "sections");
   }, [firestore]);
 
-  const { data: orders } = useCollection<any>(ordersQuery);
+  const { data: orders, isLoading: loadingOrders } = useCollection<any>(ordersQuery);
   const { data: sections } = useCollection<any>(sectionsQuery);
 
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.netAmount || 0), 0) || 0;
@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const stats = [
     { label: "Total Invoices", value: totalInvoices, icon: FileText, color: "text-blue-500" },
     { label: "Total Revenue", value: `PKR ${totalRevenue.toLocaleString()}`, icon: TrendingUp, color: "text-green-500" },
-    { label: "Sections Configured", value: totalSections, icon: Layers, color: "text-purple-500" },
+    { label: "Profiles", value: totalSections, icon: Layers, color: "text-purple-500" },
     { label: "Active Orders", value: totalInvoices, icon: PlusCircle, color: "text-orange-500" },
   ];
 
@@ -66,25 +66,27 @@ export default function DashboardPage() {
           <div className="grid gap-6 md:grid-cols-3">
             <Card className="col-span-1 md:col-span-2 border-none shadow-xl overflow-hidden">
               <CardHeader className="bg-muted/30">
-                <CardTitle className="text-sm font-bold uppercase tracking-tight">Recent Orders</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-tight">Recent Orders (Online Sync)</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {!orders || orders.length === 0 ? (
+                {loadingOrders ? (
+                  <div className="p-20 text-center opacity-30">Connecting to Firestore...</div>
+                ) : !orders || orders.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground opacity-20">
                     <FileText className="h-16 w-16 mb-4" />
-                    <p className="text-sm font-bold uppercase">No orders recorded yet.</p>
+                    <p className="text-sm font-bold uppercase">No data found online.</p>
                   </div>
                 ) : (
                   <div className="divide-y">
-                    {orders.slice(0, 5).map((order: any) => (
+                    {orders.map((order: any) => (
                       <div key={order.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
                         <div className="space-y-1">
-                          <p className="font-black text-accent">{order.customerName}</p>
-                          <p className="text-[10px] text-muted-foreground">{order.date} • {order.type}</p>
+                          <p className="font-black text-accent">{order.customerName || "Walk-in Customer"}</p>
+                          <p className="text-[10px] text-muted-foreground">{order.date} • {order.type} Window</p>
                         </div>
                         <div className="text-right">
                           <p className="font-black">PKR {order.netAmount?.toLocaleString()}</p>
-                          <p className="text-[8px] uppercase text-green-500 font-bold">Saved Online</p>
+                          <p className="text-[8px] uppercase text-green-500 font-bold">Cloud Synced</p>
                         </div>
                       </div>
                     ))}
@@ -95,19 +97,19 @@ export default function DashboardPage() {
 
             <Card className="border-none shadow-xl bg-accent/5 border-2 border-dashed border-accent/20">
               <CardHeader>
-                <CardTitle className="text-sm uppercase font-black tracking-widest">Quick Actions</CardTitle>
+                <CardTitle className="text-sm uppercase font-black tracking-widest">Quick Menu</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button className="w-full justify-start gap-3 h-14 bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg font-bold" asChild>
                   <Link href="/orders/new">
                     <PlusCircle className="h-5 w-5" />
-                    NEW ORDER
+                    CREATE NEW ORDER
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start gap-3 h-14 bg-background border-2 font-bold" asChild>
                   <Link href="/inventory/sections">
                     <Layers className="h-5 w-5" />
-                    MANAGE SECTIONS
+                    PROFILE MANAGER
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start gap-3 h-14 bg-background border-2 font-bold" asChild>

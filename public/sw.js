@@ -1,8 +1,15 @@
 
-self.addEventListener('install', (event) => {
-  console.log('Service Worker installed');
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open('awan-v1').then((cache) => cache.addAll([
+      '/',
+      '/manifest.json'
+    ])),
+  );
 });
 
-self.addEventListener('fetch', (event) => {
-  // basic offline support strategy
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => response || fetch(e.request)),
+  );
 });
