@@ -1,3 +1,4 @@
+
 "use client"
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -7,13 +8,12 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, FileText, TrendingUp, Layers, LayoutDashboard, Calculator } from "lucide-react";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy, limit } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import React from "react";
 
 export default function DashboardPage() {
   const firestore = useFirestore();
   
-  // Real-time listener for invoices
   const invoicesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, "invoices"), orderBy("timestamp", "desc"));

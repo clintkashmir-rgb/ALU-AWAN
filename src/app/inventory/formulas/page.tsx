@@ -38,14 +38,12 @@ export default function FormulasPage() {
   const [bottomFormula, setBottomFormula] = React.useState({ variable: "Width", operator: "+", constant: "0" })
   const [sideFormula, setSideFormula] = React.useState({ variable: "Height", operator: "+", constant: "0" })
 
-  // Select first section by default
   React.useEffect(() => {
     if (sections && sections.length > 0 && !selectedSectionId) {
       setSelectedSectionId(sections[0].id)
     }
   }, [sections, selectedSectionId])
 
-  // Initialize formulas when section changes
   React.useEffect(() => {
     if (currentSection) {
       const parseFormula = (f: string | undefined) => {
@@ -77,26 +75,19 @@ export default function FormulasPage() {
     
     toast({ 
       title: "Logic Saved Online", 
-      description: `Formula updated for ${currentSection.name}. This is now synced everywhere.` 
+      description: `Formula updated for ${currentSection.name}.` 
     })
   }
 
   const handleClearFormula = (id: string) => {
     if (!firestore) return;
-    const sectionToClear = sections?.find(s => s.id === id);
-    if (!sectionToClear) return;
-
     updateDocumentNonBlocking(doc(firestore, "sections", id), {
       top_formula: 'None',
       bottom_formula: 'None',
       side_formula: 'None',
       updatedAt: new Date().toISOString()
     });
-
-    toast({ 
-      title: "Formula Removed", 
-      description: `Calculation logic cleared for ${sectionToClear.name}.` 
-    })
+    toast({ title: "Logic Reset", description: "All formula parts set to None." });
   }
 
   const FormulaRow = ({ label, state, setState }: any) => {
@@ -203,14 +194,6 @@ export default function FormulasPage() {
                   <FormulaRow label="Bottom Frame" state={bottomFormula} setState={setBottomFormula} />
                   <FormulaRow label="Side Frames (x2)" state={sideFormula} setState={setSideFormula} />
                 </div>
-
-                <div className="p-4 bg-muted/50 rounded-lg flex gap-3 items-start">
-                  <Info className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Set a variable to <strong>None</strong> to exclude that piece from calculations. 
-                    Only sections with at least one active formula will show up in the New Order list.
-                  </p>
-                </div>
               </CardContent>
               <CardFooter className="flex justify-between border-t p-6 bg-muted/10">
                 <Button variant="ghost" size="sm" className="gap-2" onClick={() => {
@@ -231,14 +214,11 @@ export default function FormulasPage() {
                 <CardTitle className="text-sm flex items-center gap-2">
                   <LayoutGrid className="h-4 w-4 text-accent" /> Active Formulas
                 </CardTitle>
-                <CardDescription className="text-[10px]">Profiles currently visible in Order list.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[400px]">
                   <div className="p-4 space-y-3">
-                    {loading ? (
-                      <div className="text-center py-8 opacity-40 text-xs">Syncing with database...</div>
-                    ) : configuredSections.length === 0 ? (
+                    {configuredSections.length === 0 ? (
                       <div className="text-center py-8 opacity-40">
                         <Calculator className="h-8 w-8 mx-auto mb-2" />
                         <p className="text-xs">No active formulas.</p>
@@ -246,19 +226,16 @@ export default function FormulasPage() {
                     ) : (
                       configuredSections.map(s => (
                         <div key={s.id} className="p-3 bg-muted/20 rounded-lg border border-border/50 text-[11px] space-y-2 group relative">
-                          <div className="flex justify-between items-center mb-1">
+                          <div className="flex justify-between items-center">
                             <span className="font-bold text-accent">{s.name}</span>
-                            <div className="flex items-center gap-1">
-                              <CheckCircle2 className="h-3 w-3 text-green-500" />
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => handleClearFormula(s.id)}
-                              >
-                                <Trash2 className="h-3 w-3 text-destructive" />
-                              </Button>
-                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-5 w-5 text-destructive opacity-0 group-hover:opacity-100"
+                              onClick={() => handleClearFormula(s.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
                           </div>
                           <div className="grid grid-cols-3 gap-1 opacity-70">
                             <div className="truncate">T: {s.top_formula}</div>

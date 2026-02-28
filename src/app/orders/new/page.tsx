@@ -24,7 +24,6 @@ export default function NewOrderPage() {
   const firestore = useFirestore()
   const router = useRouter()
   
-  // States
   const [customerName, setCustomerName] = React.useState("")
   const [width, setWidth] = React.useState("4")
   const [height, setHeight] = React.useState("4")
@@ -34,7 +33,6 @@ export default function NewOrderPage() {
   const [discountPercent, setDiscountPercent] = React.useState(0)
   const [showResults, setShowResults] = React.useState(false)
 
-  // Fetch sections from Firestore
   const sectionsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, "sections");
@@ -42,7 +40,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
-  // STRICT FILTER: Only show sections that have at least one formula part configured
+  // Strictly only show sections that have a formula set
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -51,7 +49,6 @@ export default function NewOrderPage() {
     ) || []
   }, [allSections])
 
-  // Calculations
   const glassSqFt = React.useMemo(() => {
     const w = parseFloat(width) || 0
     const h = parseFloat(height) || 0
@@ -92,6 +89,7 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
+      // Calculate total ft based on specific formulas for this section
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -266,7 +264,7 @@ export default function NewOrderPage() {
                     </TableHeader>
                     <TableBody>
                       {comparisonData.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No configured profiles found in Formula Builder.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">No configured profiles found with active formulas.</TableCell></TableRow>
                       ) : (
                         comparisonData.map(s => (
                           <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
