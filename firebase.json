@@ -1,6 +1,7 @@
 {
   "hosting": {
-    "source": ".",
+    "site": "studio-5816171861-9dff2",
+    "public": "out",
     "ignore": [
       "firebase.json",
       "**/.*",

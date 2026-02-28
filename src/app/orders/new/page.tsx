@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -40,7 +39,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
-  // Strictly only show sections that have a formula set
+  // Strictly only show sections that have a formula set (Not None)
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -90,6 +89,7 @@ export default function NewOrderPage() {
       const side = evaluateFormula(s.side_formula, w, h)
       
       // Calculate total ft based on specific formulas for this section
+      // Top + Bottom + (2 * Side)
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
