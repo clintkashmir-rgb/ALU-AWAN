@@ -4,27 +4,30 @@ export const mockSections: Section[] = [
   { 
     id: '1', 
     name: 'DC30C', 
-    top_formula: 'Width', 
-    bottom_formula: 'Width', 
-    side_formula: 'Height', 
+    type: 'Sliding',
+    top_formula: 'Width - 0', 
+    bottom_formula: 'Width - 0', 
+    side_formula: 'Height - 0', 
     weight_per_ft: 0.4, 
     rate_per_ft: 220 
   },
   { 
     id: '2', 
-    name: 'DC2BC', 
-    top_formula: 'Width', 
-    bottom_formula: 'Width', 
-    side_formula: 'Height', 
-    weight_per_ft: 0.45, 
-    rate_per_ft: 240 
+    name: 'TC 26 (Bottom Only)', 
+    type: 'Sliding',
+    top_formula: 'Width * 0', 
+    bottom_formula: 'Width - 0', 
+    side_formula: 'Height * 0', 
+    weight_per_ft: 0.5, 
+    rate_per_ft: 250 
   },
   { 
     id: '3', 
     name: 'M23', 
-    top_formula: 'Width', 
-    bottom_formula: 'Width', 
-    side_formula: 'Height', 
+    type: 'Fixed',
+    top_formula: 'Width - 0', 
+    bottom_formula: 'Width - 0', 
+    side_formula: 'Height - 0', 
     weight_per_ft: 0.38, 
     rate_per_ft: 210 
   },

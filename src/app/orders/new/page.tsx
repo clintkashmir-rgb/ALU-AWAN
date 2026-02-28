@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -11,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Trash2, Save, Calculator, ReceiptText, Sparkles, Ruler } from "lucide-react"
+import { Plus, Trash2, Save, Calculator, Sparkles, Ruler } from "lucide-react"
 import { WindowItem, Section } from "@/lib/types"
 import { mockSections, mockColours, mockGlassTypes, mockHardware } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
@@ -21,10 +20,9 @@ import Link from "next/link"
 export default function NewOrderPage() {
   const { toast } = useToast()
   const [items, setItems] = React.useState<WindowItem[]>([])
-  const [customerName, setCustomerName] = React.useState("")
   const [discountPercent, setDiscountPercent] = React.useState(0)
   
-  // Form State (Section selection removed as per request)
+  // Form State
   const [formType, setFormType] = React.useState<'Fixed' | 'Sliding'>('Sliding')
   const [formPalla, setFormPalla] = React.useState('2')
   const [formColour, setFormColour] = React.useState(mockColours[0].name)
@@ -40,35 +38,60 @@ export default function NewOrderPage() {
     )
   }
 
-  // Calculate costs for all sections to provide a comparison
+  // Evaluate dynamic formula string
+  const evaluate = (formula: string, w: number, h: number): number => {
+    try {
+      // Very basic parser for "Variable [+-*/] Constant"
+      const parts = formula.split(' ');
+      if (parts.length < 3) return 0;
+      
+      const variable = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0;
+      const operator = parts[1];
+      const constant = parseFloat(parts[2]);
+
+      if (operator === '+') return variable + constant;
+      if (operator === '-') return variable - constant;
+      if (operator === '*') return variable * constant;
+      if (operator === '/') return constant !== 0 ? variable / constant : 0;
+      return 0;
+    } catch {
+      return 0;
+    }
+  }
+
   const calculateAllSections = (w: number, h: number, q: number) => {
     return mockSections.map(section => {
       const frameRate = section.rate_per_ft || 220
       const glassObj = mockGlassTypes.find(g => g.id === formGlassType)
       const glassRate = glassObj?.rate_per_sqft || 120
 
-      // Deduction logic (0.1 ft per side)
-      const frameSide = 0.1
-      const frameTop = 0.1
-      const frameBottom = 0.1
+      // Evaluate Top, Bottom, Side results
+      const topFt = evaluate(section.top_formula, w, h);
+      const bottomFt = evaluate(section.bottom_formula, w, h);
+      const sideFt = evaluate(section.side_formula, w, h);
 
-      const glassWidth = w - (2 * frameSide)
-      const glassHeight = h - (frameTop + frameBottom)
+      // Total frame for 1 window = top + bottom + (2 * side)
+      // Only add if they are > 0
+      const frameFtPerWindow = (topFt > 0 ? topFt : 0) + (bottomFt > 0 ? bottomFt : 0) + (2 * (sideFt > 0 ? sideFt : 0));
+      const totalFrameFt = frameFtPerWindow * q;
+
+      // Glass deduction
+      const glassWidth = w - 0.2
+      const glassHeight = h - 0.2
       const glassArea = Math.max(0, glassWidth * glassHeight) * q
-      const frameFt = (2 * w + 2 * h) * q
 
       const hardwareCost = selectedHardware.reduce((acc, hid) => {
         const hw = mockHardware.find(h => h.id === hid)
         return acc + (hw?.rate || 0)
       }, 0) * q
 
-      const frameCost = frameFt * frameRate
+      const frameCost = totalFrameFt * frameRate
       const glassCost = glassArea * glassRate
 
       return {
         sectionName: section.name,
         sectionId: section.id,
-        frameFt: parseFloat(frameFt.toFixed(2)),
+        frameFt: parseFloat(totalFrameFt.toFixed(2)),
         glassSqFt: parseFloat(glassArea.toFixed(2)),
         totalCost: Math.round(frameCost + glassCost + hardwareCost),
         frameCost: Math.round(frameCost),
@@ -80,7 +103,7 @@ export default function NewOrderPage() {
 
   const addItem = () => {
     if (!formWidth || !formHeight) {
-      toast({ variant: "destructive", title: "Validation Error", description: "Width and Height are required." })
+      toast({ variant: "destructive", title: "Error", description: "Width and Height are required." })
       return
     }
 
@@ -88,8 +111,6 @@ export default function NewOrderPage() {
     const h = parseFloat(formHeight)
     const q = parseInt(formQty)
     
-    // Automatically use the first section as default for the main bill, 
-    // but the UI will show comparison for all.
     const comparisons = calculateAllSections(w, h, q)
     const defaultCalc = comparisons[0]
 
@@ -115,16 +136,11 @@ export default function NewOrderPage() {
     setFormWidth("")
     setFormHeight("")
     setSelectedHardware([])
-    toast({ title: "Item Added", description: "Window dimensions saved. Checking calculations..." })
-  }
-
-  const removeItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id))
+    toast({ title: "Calculated", description: "Bill generated based on profile logic." })
   }
 
   const grossAmount = items.reduce((sum, item) => sum + item.totalCost, 0)
-  const discountAmount = grossAmount * (discountPercent / 100)
-  const netAmount = Math.max(0, grossAmount - discountAmount)
+  const netAmount = Math.max(0, grossAmount * (1 - discountPercent / 100))
 
   return (
     <SidebarProvider>
@@ -136,13 +152,13 @@ export default function NewOrderPage() {
             <h1 className="font-headline text-xl font-bold truncate">New Order</h1>
           </div>
           <Button variant="outline" size="sm" className="gap-2 border-accent text-accent" asChild>
-            <Link href="/ai-tools">
+            <Link href="/inventory/formulas">
               <Sparkles className="h-4 w-4" /> Formulas
             </Link>
           </Button>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 space-y-6 pb-32 md:pb-6 overflow-x-hidden w-full max-w-full">
+        <main className="flex-1 p-4 md:p-6 space-y-6 pb-24 overflow-x-hidden w-full max-w-full">
           <Card className="border-none shadow-lg w-full">
             <CardHeader className="p-4">
               <CardTitle className="text-md flex items-center gap-2">
@@ -176,19 +192,6 @@ export default function NewOrderPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Colour</Label>
-                  <Select value={formColour} onValueChange={setFormColour}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockColours.map(c => (
-                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
                   <Label>Width (ft)</Label>
                   <Input type="number" className="h-11" step="0.01" value={formWidth} onChange={e => setFormWidth(e.target.value)} placeholder="0.00" />
                 </div>
@@ -207,7 +210,7 @@ export default function NewOrderPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                    <Select value={formGlassType} onValueChange={setFormGlassType}>
                     <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select Glass" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {mockGlassTypes.map(g => (
@@ -237,22 +240,20 @@ export default function NewOrderPage() {
             </CardFooter>
           </Card>
 
-          {/* Automatic Section Comparison Table */}
           {items.length > 0 && (
             <Card className="border-none shadow-lg w-full bg-muted/20">
               <CardHeader className="p-4">
-                <CardTitle className="text-sm">Automatic Bill Comparison (All Sections)</CardTitle>
-                <CardDescription className="text-xs">Costs calculated automatically based on input dimensions.</CardDescription>
+                <CardTitle className="text-sm">Auto Comparison (Section Logic Applied)</CardTitle>
+                <CardDescription className="text-xs">Formula results of 0 are automatically excluded.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="w-full whitespace-nowrap">
                   <Table>
                     <TableHeader className="bg-muted">
                       <TableRow>
-                        <TableHead>Section Profile</TableHead>
-                        <TableHead className="text-right">Frame (ft)</TableHead>
-                        <TableHead className="text-right">Glass (sqft)</TableHead>
-                        <TableHead className="text-right font-bold text-accent">Total (PKR)</TableHead>
+                        <TableHead>Profile</TableHead>
+                        <TableHead className="text-right">Total Frame (ft)</TableHead>
+                        <TableHead className="text-right font-bold text-accent">Total Bill (PKR)</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -262,7 +263,6 @@ export default function NewOrderPage() {
                           <TableRow key={`${item.id}-${idx}`} className="text-xs">
                             <TableCell className="font-bold">{comp.sectionName}</TableCell>
                             <TableCell className="text-right">{comp.frameFt}</TableCell>
-                            <TableCell className="text-right">{comp.glassSqFt}</TableCell>
                             <TableCell className="text-right font-black text-accent">{comp.totalCost.toLocaleString()}</TableCell>
                           </TableRow>
                         ))
@@ -275,29 +275,24 @@ export default function NewOrderPage() {
             </Card>
           )}
 
-          {/* Order Final Breakdown */}
           <div className="grid gap-6 md:grid-cols-2 w-full">
-             <Card className="border-none shadow-lg">
+             <Card className="border-none shadow-lg bg-accent/5">
                 <CardHeader className="p-4">
-                  <CardTitle className="text-md">Bill Breakdown</CardTitle>
+                  <CardTitle className="text-md">Bill Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-4 pt-0">
-                  <div className="space-y-2 border rounded-lg p-3 bg-muted/10">
+                  <div className="space-y-2">
                     <div className="flex justify-between text-[10px] font-bold uppercase text-muted-foreground border-b pb-1">
-                      <span>Item</span>
+                      <span>Category</span>
                       <span>Amount</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Aluminum Frames</span>
+                      <span>Aluminum Logic Result</span>
                       <span className="font-medium">PKR {items.reduce((s, i) => s + i.frameCost, 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Glass Work</span>
+                      <span>Glass (Area - Deductions)</span>
                       <span className="font-medium">PKR {items.reduce((s, i) => s + i.glassCost, 0).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Hardware & Fittings</span>
-                      <span className="font-medium">PKR {items.reduce((s, i) => s + i.hardwareCost, 0).toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="pt-2 flex justify-between font-black text-lg border-t-2 border-dashed">
@@ -307,9 +302,9 @@ export default function NewOrderPage() {
                 </CardContent>
              </Card>
 
-             <Card className="border-none shadow-lg bg-accent/5">
+             <Card className="border-none shadow-lg">
                 <CardHeader className="p-4">
-                  <CardTitle className="text-md">Billing</CardTitle>
+                  <CardTitle className="text-md">Final Billing</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-4 pt-0">
                   <div className="space-y-2">
@@ -322,28 +317,21 @@ export default function NewOrderPage() {
                     />
                   </div>
                   <div className="bg-background p-4 rounded-lg border-2 border-accent/20">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] text-muted-foreground uppercase font-black">Net Payable</span>
-                      <span className="text-3xl font-black text-accent">PKR {netAmount.toLocaleString()}</span>
-                    </div>
+                    <span className="text-[10px] text-muted-foreground uppercase font-black">Net Payable</span>
+                    <p className="text-3xl font-black text-accent">PKR {netAmount.toLocaleString()}</p>
                   </div>
                 </CardContent>
-                <CardFooter className="p-4 gap-2">
-                  <Button variant="outline" className="flex-1 h-12">Quote</Button>
-                  <Button className="flex-1 h-12 bg-primary">Save Order</Button>
-                </CardFooter>
              </Card>
           </div>
         </main>
 
-        {/* Mobile Sticky Action */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t p-4 flex justify-between items-center z-30 shadow-2xl">
           <div className="flex flex-col">
-            <p className="text-[10px] text-muted-foreground font-bold tracking-tighter">{items.length} Items Calculated</p>
+            <p className="text-[10px] text-muted-foreground font-bold">{items.length} Items</p>
             <p className="font-black text-accent text-xl leading-none">PKR {netAmount.toLocaleString()}</p>
           </div>
-          <Button size="lg" className="h-12 px-6 font-black bg-accent text-accent-foreground rounded-full shadow-lg">
-            <Save className="h-5 w-5 mr-2" /> SAVE
+          <Button size="lg" className="h-12 px-8 font-black bg-accent text-accent-foreground rounded-full">
+            SAVE ORDER
           </Button>
         </div>
       </SidebarInset>

@@ -1,6 +1,7 @@
 export interface Section {
   id: string;
   name: string;
+  type: 'Sliding' | 'Fixed' | 'Both';
   top_formula: string;
   bottom_formula: string;
   side_formula: string;
