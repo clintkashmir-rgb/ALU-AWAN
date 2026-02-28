@@ -26,6 +26,7 @@ export default function NewOrderPage() {
   const [customerName, setCustomerName] = React.useState("")
   const [width, setWidth] = React.useState("4")
   const [height, setHeight] = React.useState("4")
+  const [palla, setPalla] = React.useState("2")
   const [qty, setQty] = React.useState("1")
   const [glassRate, setGlassRate] = React.useState("120")
   const [windowType, setWindowType] = React.useState<'Sliding' | 'Fixed'>('Sliding')
@@ -62,7 +63,7 @@ export default function NewOrderPage() {
   const evaluateFormula = (formula: string | undefined, w: number, h: number): number => {
     try {
       if (!formula || formula === 'None') return 0
-      const parts = formula.split(/\s+/) // Robust split by any whitespace
+      const parts = formula.split(/\s+/)
       if (parts.length < 3) return 0
       
       const variableValue = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0
@@ -84,13 +85,14 @@ export default function NewOrderPage() {
     const w = parseFloat(width) || 0
     const h = parseFloat(height) || 0
     const q = parseInt(qty) || 0
+    const p = parseInt(palla) || 2
 
     return configuredSections.map(s => {
       const top = evaluateFormula(s.top_formula, w, h)
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
-      // Standard frame logic: Top + Bottom + 2 Sides
+      // Standard frame logic: Top + Bottom + 2 Sides (Adjusted for Palla if needed in future)
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -102,9 +104,8 @@ export default function NewOrderPage() {
         amount: Math.round(totalFt * rate)
       }
     })
-  }, [width, height, qty, configuredSections, showResults])
+  }, [width, height, qty, palla, configuredSections, showResults])
 
-  // Calculation based on first available profile for grand total reference
   const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
@@ -117,7 +118,7 @@ export default function NewOrderPage() {
       toast({ 
         variant: "destructive", 
         title: "No Formulas Found", 
-        description: "Please go to Formula Builder and add logic first." 
+        description: "Please add logic in Formula Builder first." 
       })
       return
     }
@@ -138,6 +139,7 @@ export default function NewOrderPage() {
       date: new Date().toLocaleDateString(),
       width: parseFloat(width),
       height: parseFloat(height),
+      palla: parseInt(palla),
       qty: parseInt(qty),
       type: windowType,
       glassSqFt,
@@ -149,7 +151,7 @@ export default function NewOrderPage() {
 
     addDocumentNonBlocking(collection(firestore, "invoices"), orderData);
     
-    toast({ title: "Order Saved Online", description: "Data synced to your Dashboard." });
+    toast({ title: "Order Saved", description: "Data synced to your Dashboard." });
     router.push("/");
   }
 
@@ -160,7 +162,7 @@ export default function NewOrderPage() {
         <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
           <div className="flex items-center gap-2">
             <SidebarTrigger />
-            <h1 className="font-headline text-xl font-bold uppercase tracking-tight">New Order</h1>
+            <h1 className="font-headline text-xl font-bold uppercase">New Order</h1>
           </div>
         </header>
 
@@ -172,51 +174,62 @@ export default function NewOrderPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div className="md:col-span-2 space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Customer Name</Label>
-                  <Input placeholder="Enter Name..." className="h-12 text-lg" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Customer Name</Label>
+                  <Input placeholder="Enter Name..." className="h-11" value={customerName} onChange={e => setCustomerName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Type</Label>
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Type</Label>
                   <Select value={windowType} onValueChange={(v: any) => { setWindowType(v); setShowResults(false); }}>
-                    <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Sliding">Sliding Window</SelectItem>
-                      <SelectItem value="Fixed">Fixed Window</SelectItem>
+                      <SelectItem value="Sliding">Sliding</SelectItem>
+                      <SelectItem value="Fixed">Fixed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Width (ft)</Label>
-                  <Input type="number" step="any" className="h-12 text-lg text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Width (ft)</Label>
+                  <Input type="number" step="any" className="h-11 text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Height (ft)</Label>
-                  <Input type="number" step="any" className="h-12 text-lg text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Height (ft)</Label>
+                  <Input type="number" step="any" className="h-11 text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Quantity (N)</Label>
-                  <Input type="number" className="h-12 text-lg text-center font-bold" value={qty} onChange={e => { setQty(e.target.value); setShowResults(false); }} />
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Palla</Label>
+                  <Select value={palla} onValueChange={(v) => { setPalla(v); setShowResults(false); }}>
+                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 Palla</SelectItem>
+                      <SelectItem value="3">3 Palla</SelectItem>
+                      <SelectItem value="4">4 Palla</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Qty</Label>
+                  <Input type="number" className="h-11 text-center font-bold" value={qty} onChange={e => { setQty(e.target.value); setShowResults(false); }} />
                 </div>
               </div>
 
               {configuredSections.length === 0 && (
-                <div className="p-4 bg-destructive/10 border-2 border-dashed border-destructive/30 rounded-xl flex flex-col items-center justify-center gap-3 text-destructive animate-pulse">
-                  <AlertTriangle className="h-8 w-8" />
-                  <p className="text-sm font-black uppercase text-center">
+                <div className="p-4 bg-destructive/10 border border-dashed border-destructive/30 rounded-xl flex flex-col items-center justify-center gap-2 text-destructive">
+                  <AlertTriangle className="h-6 w-6" />
+                  <p className="text-[10px] font-black uppercase text-center">
                     Attention: No formulas added!<br/>
-                    <span className="text-[10px] opacity-70">Please add logic in Inventory &gt; Formulas first.</span>
+                    Please add logic in Inventory &gt; Formulas first.
                   </p>
                 </div>
               )}
 
               <Button 
                 onClick={handleCalculate} 
-                className="w-full h-14 text-lg font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2 mt-4"
+                className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2 mt-4"
                 disabled={configuredSections.length === 0}
               >
-                <CheckCircle className="h-6 w-6" /> OK - CALCULATE
+                <CheckCircle className="h-5 w-5" /> OK - CALCULATE
               </Button>
             </CardContent>
           </Card>
@@ -230,23 +243,23 @@ export default function NewOrderPage() {
 
                 <Card className="md:col-span-2 border-none shadow-lg bg-accent/5 border-2 border-dashed border-accent/20">
                   <CardHeader>
-                    <CardTitle className="text-xs font-black uppercase text-accent tracking-widest flex items-center gap-2">
-                      <Calculator className="h-4 w-4" /> Glass Calculation Box
+                    <CardTitle className="text-[10px] font-black uppercase text-accent tracking-widest flex items-center gap-2">
+                      <Calculator className="h-4 w-4" /> Glass Calculation
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Calculation: W &times; H &times; Q = Total Sqft</span>
-                      <span className="text-xl font-black text-accent">{width} &times; {height} &times; {qty} = {glassSqFt} Sqft</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Result: {width}ft x {height}ft x {qty}</span>
+                      <span className="text-xl font-black text-accent">{glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Glass Rate (PKR/Sqft)</Label>
-                        <Input type="number" className="h-12 text-xl font-black" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
+                        <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Rate (/Sqft)</Label>
+                        <Input type="number" className="h-10 text-lg font-black" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
                       </div>
                       <div className="text-right space-y-1">
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Glass Total</Label>
-                        <div className="text-3xl font-black text-accent">PKR {glassAmount.toLocaleString()}</div>
+                        <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Total</Label>
+                        <div className="text-2xl font-black text-accent">PKR {glassAmount.toLocaleString()}</div>
                       </div>
                     </div>
                   </CardContent>
@@ -255,25 +268,25 @@ export default function NewOrderPage() {
 
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison</CardTitle>
+                  <CardTitle className="text-[10px] font-black uppercase tracking-widest">Section Comparison</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
-                        <TableHead className="font-bold">Profile</TableHead>
-                        <TableHead className="text-right font-bold">Total Ft</TableHead>
-                        <TableHead className="text-right font-bold">Rate (/ft)</TableHead>
-                        <TableHead className="text-right font-bold">Amount (PKR)</TableHead>
+                        <TableHead className="font-bold text-[10px]">Profile</TableHead>
+                        <TableHead className="text-right font-bold text-[10px]">Total Ft</TableHead>
+                        <TableHead className="text-right font-bold text-[10px]">Rate</TableHead>
+                        <TableHead className="text-right font-bold text-[10px]">Amount</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {comparisonData.map(s => (
                         <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
-                          <TableCell className="font-black text-accent">{s.name}</TableCell>
-                          <TableCell className="text-right font-mono font-bold">{s.totalFt} ft</TableCell>
-                          <TableCell className="text-right text-xs opacity-70">PKR {s.rate}</TableCell>
-                          <TableCell className="text-right font-black text-xl">PKR {s.amount.toLocaleString()}</TableCell>
+                          <TableCell className="font-black text-accent text-xs">{s.name}</TableCell>
+                          <TableCell className="text-right font-mono font-bold text-xs">{s.totalFt} ft</TableCell>
+                          <TableCell className="text-right text-[10px] opacity-70">PKR {s.rate}</TableCell>
+                          <TableCell className="text-right font-black text-lg">PKR {s.amount.toLocaleString()}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -282,19 +295,19 @@ export default function NewOrderPage() {
               </Card>
 
               <div className="flex flex-col md:flex-row items-end justify-between bg-card p-6 rounded-2xl shadow-2xl border gap-6">
-                <div className="w-full md:w-48 space-y-2">
-                  <Label className="text-[10px] uppercase font-black tracking-widest">Discount (%)</Label>
-                  <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} className="h-12 text-xl font-bold" />
+                <div className="w-full md:w-40 space-y-2">
+                  <Label className="text-[8px] uppercase font-black tracking-widest">Discount (%)</Label>
+                  <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} className="h-10 text-lg font-bold" />
                 </div>
                 <div className="text-right space-y-1 flex-1">
-                  <p className="text-[10px] uppercase font-black text-muted-foreground tracking-widest">Grand Total</p>
-                  <h2 className="text-5xl font-black text-accent">PKR {grandTotal.toLocaleString()}</h2>
+                  <p className="text-[8px] uppercase font-black text-muted-foreground tracking-widest">Grand Total</p>
+                  <h2 className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</h2>
                 </div>
                 <Button 
                   onClick={handleSaveOrder} 
-                  className="h-16 px-12 bg-primary text-primary-foreground hover:bg-primary/90 text-xl font-black rounded-xl shadow-xl gap-3"
+                  className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 text-lg font-black rounded-xl shadow-xl gap-2"
                 >
-                  <Save className="h-6 w-6" /> SAVE ORDER
+                  <Save className="h-5 w-5" /> SAVE ORDER
                 </Button>
               </div>
             </div>
