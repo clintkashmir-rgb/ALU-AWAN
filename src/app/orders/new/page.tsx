@@ -92,8 +92,6 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
-      // Calculate total ft based on active pieces
-      // top + bottom + (2 * side)
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -151,7 +149,7 @@ export default function NewOrderPage() {
 
     addDocumentNonBlocking(collection(firestore, "invoices"), orderData);
     
-    toast({ title: "Order Saved", description: "Data synced to your Dashboard." });
+    toast({ title: "Order Saved Online", description: "Data synced to your Dashboard and History." });
     router.push("/invoices");
   }
 
@@ -167,7 +165,6 @@ export default function NewOrderPage() {
         </header>
 
         <main className="flex-1 p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
-          {/* Section 1: Dimensions Input */}
           <Card className="border-none shadow-xl">
             <CardHeader className="pb-4">
               <CardTitle className="text-sm font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
@@ -221,7 +218,6 @@ export default function NewOrderPage() {
             </CardContent>
           </Card>
 
-          {/* Section 2: Results Displayed only after OK */}
           {showResults && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -254,7 +250,6 @@ export default function NewOrderPage() {
                 </Card>
               </div>
 
-              {/* 4-Column Profile Comparison Table */}
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30">
                   <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison (Formula Based)</CardTitle>

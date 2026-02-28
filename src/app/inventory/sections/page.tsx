@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase"
 import { collection, doc } from "firebase/firestore"
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates"
+import { Badge } from "@/components/ui/badge"
 
 export default function SectionsPage() {
   const { toast } = useToast()
@@ -42,9 +43,11 @@ export default function SectionsPage() {
     rate_per_ft: 220
   })
 
-  const filteredSections = sections?.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || []
+  const filteredSections = React.useMemo(() => {
+    return sections?.filter(s => 
+      s.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ) || []
+  }, [sections, searchTerm])
 
   const handleSaveSection = () => {
     if (!currentSection.name || !firestore) {
@@ -68,7 +71,7 @@ export default function SectionsPage() {
       weight_per_ft: 0.4,
       rate_per_ft: 220
     })
-    toast({ title: "Section Added", description: `${currentSection.name} saved. Now configure its formula.` })
+    toast({ title: "Section Added", description: `${currentSection.name} saved online.` })
   }
 
   const handleDelete = (id: string) => {
