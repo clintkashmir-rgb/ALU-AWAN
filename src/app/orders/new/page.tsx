@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calculator, Save, CheckCircle, Sparkles } from "lucide-react"
+import { Calculator, Save, CheckCircle, Sparkles, Ruler } from "lucide-react"
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { addDoc, collection, serverTimestamp } from "firebase/firestore"
@@ -98,7 +98,7 @@ export default function NewOrderPage() {
 
   const handleCalculate = () => {
     if (!width || !height || !qty) {
-      toast({ variant: "destructive", title: "Inputs Required", description: "Please enter width, height and quantity." })
+      toast({ variant: "destructive", title: "Inputs Required", description: "Enter Width, Height and Qty." })
       return
     }
     setShowResults(true)
@@ -106,7 +106,7 @@ export default function NewOrderPage() {
 
   const handleSaveOrder = async () => {
     if (!customerName) {
-      toast({ variant: "destructive", title: "Missing Info", description: "Customer name is required." })
+      toast({ variant: "destructive", title: "Missing Info", description: "Enter Customer Name." })
       return
     }
 
@@ -128,7 +128,7 @@ export default function NewOrderPage() {
         timestamp: serverTimestamp()
       })
       
-      toast({ title: "Order Saved", description: "Data successfully synced online." })
+      toast({ title: "Order Saved", description: "Synched to online cloud." })
       router.push("/invoices")
     } catch (e: any) {
       toast({ variant: "destructive", title: "Save Failed", description: e.message })
@@ -153,14 +153,14 @@ export default function NewOrderPage() {
           <Card className="border-none shadow-xl">
             <CardHeader className="pb-4">
               <CardTitle className="text-sm font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-accent" /> 1. Dimensions Entry
+                <Ruler className="h-4 w-4 text-accent" /> 1. Dimensions Entry
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Customer Name</Label>
-                  <Input placeholder="Enter customer name..." className="h-12 text-lg" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+                  <Input placeholder="Customer Name..." className="h-12 text-lg" value={customerName} onChange={e => setCustomerName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Type</Label>
@@ -173,16 +173,16 @@ export default function NewOrderPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase text-muted-foreground">Quantity (N)</Label>
-                  <Input type="number" className="h-12 text-lg text-center font-bold" value={qty} onChange={e => { setQty(e.target.value); setShowResults(false); }} />
-                </div>
-                <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Width (W-ft)</Label>
                   <Input type="number" className="h-12 text-lg text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Height (H-ft)</Label>
                   <Input type="number" className="h-12 text-lg text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase text-muted-foreground">Quantity (N)</Label>
+                  <Input type="number" className="h-12 text-lg text-center font-bold" value={qty} onChange={e => { setQty(e.target.value); setShowResults(false); }} />
                 </div>
               </div>
 
@@ -208,12 +208,12 @@ export default function NewOrderPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W × H × Q</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W × H × Q = Total</span>
                       <span className="text-xl font-black text-accent">{width} × {height} × {qty} = {glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Rate (PKR/Sqft)</Label>
+                        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Glass Rate (PKR/Sqft)</Label>
                         <Input type="number" className="h-12 text-xl font-black" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
                       </div>
                       <div className="text-right space-y-1">
@@ -241,7 +241,7 @@ export default function NewOrderPage() {
                     </TableHeader>
                     <TableBody>
                       {comparisonData.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">Configure profile formulas in Inventory to see results.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={4} className="text-center py-12 text-muted-foreground">Setup profile formulas in Inventory to see results.</TableCell></TableRow>
                       ) : (
                         comparisonData.map(s => (
                           <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">

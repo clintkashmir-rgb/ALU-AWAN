@@ -1,15 +1,8 @@
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open('awan-v1').then((cache) => cache.addAll([
-      '/',
-      '/manifest.json'
-    ])),
-  );
+self.addEventListener('install', function(event) {
+  console.log('Service Worker installed');
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => response || fetch(e.request)),
-  );
+self.addEventListener('fetch', function(event) {
+  // Simple fetch handler for PWA requirements
 });
