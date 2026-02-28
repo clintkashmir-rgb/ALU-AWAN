@@ -14,10 +14,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useCollection, useMemoFirebase } from "@/firebase"
 import { collection, query, orderBy } from "firebase/firestore"
 import { useFirestore } from "@/firebase/provider"
+import { useRouter } from "next/navigation"
 
 export default function InvoicesPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
   const firestore = useFirestore()
+  const router = useRouter()
   
   const invoicesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -32,6 +34,10 @@ export default function InvoicesPage() {
       o.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [invoices, searchTerm]);
+
+  const handlePrint = (id: string) => {
+    window.open(`/invoices/${id}/print`, '_blank');
+  }
 
   return (
     <SidebarProvider>
@@ -97,8 +103,12 @@ export default function InvoicesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2"><Printer className="h-4 w-4" /> Print</DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2"><Download className="h-4 w-4" /> PDF</DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2" onClick={() => handlePrint(inv.id)}>
+                              <Printer className="h-4 w-4" /> Print
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2">
+                              <Download className="h-4 w-4" /> PDF
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
