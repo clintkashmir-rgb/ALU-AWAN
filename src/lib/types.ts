@@ -7,11 +7,17 @@ export interface Section {
   side_formula: string;
   weight_per_ft: number;
   rate_per_ft?: number;
+  rates?: {
+    dull: number;
+    champagne: number;
+    white_black: number;
+  };
 }
 
 export interface Colour {
   id: string;
   name: string;
+  category?: 'dull' | 'champagne' | 'white_black';
 }
 
 export interface Thickness {

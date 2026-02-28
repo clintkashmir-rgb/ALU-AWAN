@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Trash2, Save, Calculator, Sparkles, Ruler } from "lucide-react"
-import { WindowItem, Section } from "@/lib/types"
+import { WindowItem, Section, Colour } from "@/lib/types"
 import { mockSections, mockColours, mockGlassTypes, mockHardware } from "@/lib/mock-data"
 import { useToast } from "@/hooks/use-toast"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -25,12 +25,14 @@ export default function NewOrderPage() {
   // Form State
   const [formType, setFormType] = React.useState<'Fixed' | 'Sliding'>('Sliding')
   const [formPalla, setFormPalla] = React.useState('2')
-  const [formColour, setFormColour] = React.useState(mockColours[0].name)
+  const [formColourId, setFormColourId] = React.useState(mockColours[0].id)
   const [formGlassType, setFormGlassType] = React.useState(mockGlassTypes[0].id)
   const [formWidth, setFormWidth] = React.useState("")
   const [formHeight, setFormHeight] = React.useState("")
   const [formQty, setFormQty] = React.useState("1")
   const [selectedHardware, setSelectedHardware] = React.useState<string[]>([])
+
+  const selectedColour = mockColours.find(c => c.id === formColourId) || mockColours[0]
 
   const toggleHardware = (id: string) => {
     setSelectedHardware(prev => 
@@ -41,7 +43,6 @@ export default function NewOrderPage() {
   // Evaluate dynamic formula string
   const evaluate = (formula: string, w: number, h: number): number => {
     try {
-      // Very basic parser for "Variable [+-*/] Constant"
       const parts = formula.split(' ');
       if (parts.length < 3) return 0;
       
@@ -59,26 +60,33 @@ export default function NewOrderPage() {
     }
   }
 
-  const calculateAllSections = (w: number, h: number, q: number) => {
+  const calculateAllSections = (w: number, h: number, q: number, colour: Colour) => {
     return mockSections.map(section => {
-      const frameRate = section.rate_per_ft || 220
+      // Pick rate based on selected color category
+      let frameRate = 220;
+      if (section.rates && colour.category) {
+        frameRate = section.rates[colour.category] || 220;
+      } else if (section.rate_per_ft) {
+        frameRate = section.rate_per_ft;
+      }
+
       const glassObj = mockGlassTypes.find(g => g.id === formGlassType)
       const glassRate = glassObj?.rate_per_sqft || 120
 
-      // Evaluate Top, Bottom, Side results
+      // Frame deductions (0.1 ft per side = 0.2 ft total)
+      const deduction = 0.1
+      
       const topFt = evaluate(section.top_formula, w, h);
       const bottomFt = evaluate(section.bottom_formula, w, h);
       const sideFt = evaluate(section.side_formula, w, h);
 
       // Total frame for 1 window = top + bottom + (2 * side)
-      // Only add if they are > 0
+      // Results <= 0 are ignored
       const frameFtPerWindow = (topFt > 0 ? topFt : 0) + (bottomFt > 0 ? bottomFt : 0) + (2 * (sideFt > 0 ? sideFt : 0));
       const totalFrameFt = frameFtPerWindow * q;
 
-      // Glass deduction
-      const glassWidth = w - 0.2
-      const glassHeight = h - 0.2
-      const glassArea = Math.max(0, glassWidth * glassHeight) * q
+      // Glass Area = (Width - 0.2) * (Height - 0.2)
+      const glassArea = Math.max(0, (w - (2 * deduction)) * (h - (2 * deduction))) * q
 
       const hardwareCost = selectedHardware.reduce((acc, hid) => {
         const hw = mockHardware.find(h => h.id === hid)
@@ -96,7 +104,8 @@ export default function NewOrderPage() {
         totalCost: Math.round(frameCost + glassCost + hardwareCost),
         frameCost: Math.round(frameCost),
         glassCost: Math.round(glassCost),
-        hardwareCost
+        hardwareCost,
+        rateApplied: frameRate
       }
     })
   }
@@ -111,14 +120,14 @@ export default function NewOrderPage() {
     const h = parseFloat(formHeight)
     const q = parseInt(formQty)
     
-    const comparisons = calculateAllSections(w, h, q)
+    const comparisons = calculateAllSections(w, h, q, selectedColour)
     const defaultCalc = comparisons[0]
 
     const newItem: WindowItem = {
       id: Math.random().toString(36).substr(2, 9),
       type: formType,
       pallaQty: parseInt(formPalla),
-      colour: formColour,
+      colour: selectedColour.name,
       glassType: mockGlassTypes.find(g => g.id === formGlassType)?.name || 'Standard',
       width: w,
       height: h,
@@ -180,14 +189,15 @@ export default function NewOrderPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Palla</Label>
-                  <Select value={formPalla} onValueChange={setFormPalla}>
+                  <Label>Colour</Label>
+                  <Select value={formColourId} onValueChange={setFormColourId}>
                     <SelectTrigger className="h-11">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="2">2 Palla</SelectItem>
-                      <SelectItem value="3">3 Palla</SelectItem>
+                      {mockColours.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -243,8 +253,8 @@ export default function NewOrderPage() {
           {items.length > 0 && (
             <Card className="border-none shadow-lg w-full bg-muted/20">
               <CardHeader className="p-4">
-                <CardTitle className="text-sm">Auto Comparison (Section Logic Applied)</CardTitle>
-                <CardDescription className="text-xs">Formula results of 0 are automatically excluded.</CardDescription>
+                <CardTitle className="text-sm">Section Comparison (Auto Rates Applied)</CardTitle>
+                <CardDescription className="text-xs">Based on {selectedColour.name} rates.</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="w-full whitespace-nowrap">
@@ -252,16 +262,18 @@ export default function NewOrderPage() {
                     <TableHeader className="bg-muted">
                       <TableRow>
                         <TableHead>Profile</TableHead>
+                        <TableHead className="text-right">Rate (/ft)</TableHead>
                         <TableHead className="text-right">Total Frame (ft)</TableHead>
                         <TableHead className="text-right font-bold text-accent">Total Bill (PKR)</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {items.map((item) => {
-                        const comparisons = calculateAllSections(item.width, item.height, item.quantity)
+                        const comparisons = calculateAllSections(item.width, item.height, item.quantity, selectedColour)
                         return comparisons.map((comp, idx) => (
                           <TableRow key={`${item.id}-${idx}`} className="text-xs">
                             <TableCell className="font-bold">{comp.sectionName}</TableCell>
+                            <TableCell className="text-right text-muted-foreground">{comp.rateApplied}</TableCell>
                             <TableCell className="text-right">{comp.frameFt}</TableCell>
                             <TableCell className="text-right font-black text-accent">{comp.totalCost.toLocaleString()}</TableCell>
                           </TableRow>
@@ -287,12 +299,16 @@ export default function NewOrderPage() {
                       <span>Amount</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Aluminum Logic Result</span>
+                      <span>Aluminum Cost</span>
                       <span className="font-medium">PKR {items.reduce((s, i) => s + i.frameCost, 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Glass (Area - Deductions)</span>
+                      <span>Glass Cost</span>
                       <span className="font-medium">PKR {items.reduce((s, i) => s + i.glassCost, 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Hardware Cost</span>
+                      <span className="font-medium">PKR {items.reduce((s, i) => s + i.hardwareCost, 0).toLocaleString()}</span>
                     </div>
                   </div>
                   <div className="pt-2 flex justify-between font-black text-lg border-t-2 border-dashed">
@@ -325,7 +341,7 @@ export default function NewOrderPage() {
           </div>
         </main>
 
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t p-4 flex justify-between items-center z-30 shadow-2xl">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t p-4 flex justify-between items-center z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.2)]">
           <div className="flex flex-col">
             <p className="text-[10px] text-muted-foreground font-bold">{items.length} Items</p>
             <p className="font-black text-accent text-xl leading-none">PKR {netAmount.toLocaleString()}</p>
