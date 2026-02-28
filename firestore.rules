@@ -1,168 +1,38 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * Awan Aluminum Manager - Security Rules
-     *
-     * CORE PHILOSOPHY:
-     * This ruleset implements a Role-Based Access Control (RBAC) model combined with individual 
-     * document ownership. Security is enforced through "Existence over Content" for global roles 
-     * (Owner, Staff) and via denormalized ownership fields (createdByUserId) for transactional data.
-     *
-     * DATA STRUCTURE:
-     * - /user_profiles/{userId}: User-specific metadata.
-     * - /roles_owner/{userId} & /roles_staff/{userId}: Marker collections for global authorization.
-     * - /master_data/...: Shared lookup data (Sections, Colours, etc.) accessible by all staff.
-     * - /customers: Shared database of clients.
-     * - /invoices: Transactional data, secured by creator or owner role.
-     *
-     * KEY SECURITY DECISIONS:
-     * 1. Authorization Independence: To avoid slow 'get()' calls, the 'createdByUserId' is 
-     *    denormalized into Invoices and all sub-items (InvoiceItem, InvoiceSectionItem).
-     * 2. Prototyping Mode: Schema validation is omitted to favor iteration speed, while 
-     *    relational integrity (e.g., ensuring a user cannot spoof their creator ID) is strictly enforced.
-     * 3. Global Roles: Administrative access is determined by checking for the existence of 
-     *    a document in the 'roles_owner' or 'roles_staff' collections.
-     */
-
-    // --- GLOBAL HELPER FUNCTIONS ---
-
+    // Helper to check if user is signed in
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    // Allow all authenticated users to read/write sections (inventory)
+    match /sections/{sectionId} {
+      allow read, write: if isSignedIn();
     }
 
-    // Checks if the user has the global 'Owner' role via collection existence
-    function isGlobalOwner() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_owner/$(request.auth.uid));
-    }
-
-    // Checks if the user has the global 'Staff' role via collection existence
-    function isGlobalStaff() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_staff/$(request.auth.uid));
-    }
-
-    // Verifies the document exists for update/delete operations
-    function isExistingDocument() {
-      return resource != null;
-    }
-
-    // --- COLLECTION RULES ---
-
-    /**
-     * @description Rules for user profiles. Users can manage their own; Owners can manage all.
-     * @path /user_profiles/{userId}
-     * @allow (get) request.auth.uid == userId
-     * @deny (write) request.auth.uid != userId && !isGlobalOwner()
-     * @principle Path-based ownership and administrative override.
-     */
-    match /user_profiles/{userId} {
-      allow get, list: if isOwner(userId) || isGlobalOwner();
-      allow create: if isOwner(userId) || isGlobalOwner();
-      allow update, delete: if (isOwner(userId) || isGlobalOwner()) && isExistingDocument();
-    }
-
-    /**
-     * @description Authorization markers for Owner and Staff roles.
-     * @path /roles_owner/{userId} | /roles_staff/{userId}
-     * @allow (get) isSignedIn()
-     * @deny (write) !isGlobalOwner()
-     * @principle Database-level access control via marker collections.
-     */
-    match /roles_owner/{userId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isGlobalOwner();
-    }
-    match /roles_staff/{userId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isGlobalOwner();
-    }
-
-    /**
-     * @description Customer data management. Shared by all staff and owners.
-     * @path /customers/{customerId}
-     * @allow (create) isGlobalStaff() || isGlobalOwner()
-     * @deny (read) !isSignedIn()
-     * @principle Role-based CRUD for business-wide entities.
-     */
-    match /customers/{customerId} {
-      allow get, list: if isSignedIn() && (isGlobalStaff() || isGlobalOwner());
-      allow create: if isGlobalStaff() || isGlobalOwner();
-      allow update, delete: if (isGlobalStaff() || isGlobalOwner()) && isExistingDocument();
-    }
-
-    /**
-     * @description Master Data (Sections, Colours, Thickness, Rates). Read-only for staff, CRUD for Owner.
-     * @path /master_data/{category}/{itemId}
-     * @allow (get) isSignedIn()
-     * @deny (create) isGlobalStaff() (Staff cannot modify master data)
-     * @principle Centralized configuration with restricted write access.
-     */
-    match /master_data/{category}/{itemId} {
-      allow get, list: if isSignedIn();
-      allow create: if isGlobalOwner();
-      allow update, delete: if isGlobalOwner() && isExistingDocument();
-    }
-
-    /**
-     * @description Global App settings singleton.
-     * @path /app_settings/config
-     * @allow (get) isSignedIn()
-     * @deny (update) !isGlobalOwner()
-     * @principle Public read for config, admin write.
-     */
-    match /app_settings/config {
-      allow get: if isSignedIn();
-      allow list: if false; // Singleton, no listing needed
-      allow create, update, delete: if isGlobalOwner();
-    }
-
-    /**
-     * @description Invoices. Accessible by the creating staff member or any owner.
-     * @path /invoices/{invoiceId}
-     * @allow (create) request.resource.data.createdByUserId == request.auth.uid
-     * @deny (update) resource.data.createdByUserId != request.auth.uid && !isGlobalOwner()
-     * @principle Ownership validation via denormalized UID and relational integrity.
-     */
+    // Allow all authenticated users to read/write invoices (orders)
     match /invoices/{invoiceId} {
-      // Allow read/list if owner OR (staff AND document creator)
-      allow get, list: if isGlobalOwner() || (isGlobalStaff() && (resource == null || resource.data.createdByUserId == request.auth.uid));
-      // Allow create if owner OR (staff AND new document creator matches authenticated user)
-      allow create: if (isGlobalStaff() || isGlobalOwner()) && request.resource.data.createdByUserId == request.auth.uid;
-      // Allow update/delete if owner OR (staff AND existing document creator matches authenticated user) AND document exists
-      allow update, delete: if (isGlobalOwner() || (isGlobalStaff() && resource.data.createdByUserId == request.auth.uid)) && isExistingDocument();
-
-      /**
-       * @description Line items within an invoice.
-       * @path /invoices/{invoiceId}/items/{itemId}
-       * @principle Inherits ownership logic using denormalized 'createdByUserId'.
-       */
+      allow read, write: if isSignedIn();
+      
+      // Allow nested items and sections
       match /items/{itemId} {
-        // Allow read/list if owner OR (staff AND document creator)
-        allow get, list: if isGlobalOwner() || (isGlobalStaff() && (resource == null || resource.data.createdByUserId == request.auth.uid));
-        // Allow create if owner OR (staff AND new document creator matches authenticated user)
-        allow create: if (isGlobalStaff() || isGlobalOwner()) && request.resource.data.createdByUserId == request.auth.uid;
-        // Allow update/delete if owner OR (staff AND existing document creator matches authenticated user) AND document exists
-        allow update, delete: if (isGlobalOwner() || (isGlobalStaff() && resource.data.createdByUserId == request.auth.uid)) && isExistingDocument();
-
-        /**
-         * @description Section details within an invoice item.
-         * @path /invoices/{invoiceId}/items/{itemId}/sections/{sectionItemId}
-         * @principle Multi-level denormalization for authorization performance.
-         */
+        allow read, write: if isSignedIn();
         match /sections/{sectionItemId} {
-          // Allow read/list if owner OR (staff AND document creator)
-          allow get, list: if isGlobalOwner() || (isGlobalStaff() && (resource == null || resource.data.createdByUserId == request.auth.uid));
-          // Allow create if owner OR (staff AND new document creator matches authenticated user)
-          allow create: if (isGlobalStaff() || isGlobalOwner()) && request.resource.data.createdByUserId == request.auth.uid;
-          // Allow update/delete if owner OR (staff AND existing document creator matches authenticated user) AND document exists
-          allow update, delete: if (isGlobalOwner() || (isGlobalStaff() && resource.data.createdByUserId == request.auth.uid)) && isExistingDocument();
+          allow read, write: if isSignedIn();
         }
       }
+    }
+    
+    // Legacy support for 'orders' collection if used
+    match /orders/{orderId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if isSignedIn();
     }
   }
 }

@@ -1,12 +1,12 @@
 
 {
   "name": "Awan Aluminum Manager",
-  "short_name": "AwanManager",
+  "short_name": "Awan Manager",
   "description": "Industrial Precision in Aluminum Management",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#262B2F",
-  "theme_color": "#546C82",
+  "theme_color": "#33CCCE",
   "icons": [
     {
       "src": "https://picsum.photos/seed/awan/192/192",

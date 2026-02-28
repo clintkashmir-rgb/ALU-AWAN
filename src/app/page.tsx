@@ -16,7 +16,7 @@ export default function DashboardPage() {
   
   const ordersQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "orders"), orderBy("timestamp", "desc"), limit(10));
+    return query(collection(firestore, "invoices"), orderBy("timestamp", "desc"), limit(10));
   }, [firestore]);
 
   const sectionsQuery = useMemoFirebase(() => {

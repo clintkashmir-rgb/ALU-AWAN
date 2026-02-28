@@ -76,7 +76,7 @@ export default function NewOrderPage() {
     const q = parseInt(qty) || 0
 
     return sections
-      .filter(s => (s.type === windowType || s.type === 'Both') && (s.top_formula !== 'None' || s.bottom_formula !== 'None'))
+      .filter(s => (s.type === windowType || s.type === 'Both'))
       .map(s => {
         const top = evaluateFormula(s.top_formula, w, h)
         const bottom = evaluateFormula(s.bottom_formula, w, h)
@@ -113,7 +113,7 @@ export default function NewOrderPage() {
     try {
       if (!firestore) throw new Error("Firestore not initialized");
       
-      await addDoc(collection(firestore, "orders"), {
+      await addDoc(collection(firestore, "invoices"), {
         customerName,
         date: new Date().toLocaleDateString(),
         width: parseFloat(width),
