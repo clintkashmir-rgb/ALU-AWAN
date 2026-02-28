@@ -1,16 +1,16 @@
 {
   "hosting": {
-    "public": "out",
+    "source": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
+    "frameworksBackend": {
+      "region": "europe-west1"
+    }
+  },
+  "database": {
+    "rules": "database.rule.json"
   }
 }
