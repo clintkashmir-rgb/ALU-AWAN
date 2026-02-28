@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calculator, Save, RefreshCcw, LayoutGrid, Trash2, AlertTriangle } from "lucide-react"
+import { Calculator, Save, RefreshCcw, LayoutGrid, AlertTriangle, CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -74,19 +74,8 @@ export default function FormulasPage() {
     
     toast({ 
       title: "Logic Saved", 
-      description: `Formula updated for ${currentSection.name}. This profile will now show in New Order.` 
+      description: `Formula updated for ${currentSection.name}. This profile is now permanent.` 
     })
-  }
-
-  const handleClearFormula = (id: string) => {
-    if (!firestore) return;
-    updateDocumentNonBlocking(doc(firestore, "sections", id), {
-      top_formula: 'None',
-      bottom_formula: 'None',
-      side_formula: 'None',
-      updatedAt: new Date().toISOString()
-    });
-    toast({ title: "Logic Reset", description: "All formula parts set to None. This profile will no longer show in New Order." });
   }
 
   const FormulaRow = ({ label, state, setState }: any) => {
@@ -132,7 +121,7 @@ export default function FormulasPage() {
           />
 
           <div className="ml-auto px-3 py-1.5 bg-accent/5 border border-accent/10 rounded font-mono text-xs text-accent">
-            {state.variable === 'None' ? '---' : `${state.variable} ${state.operator} ${state.constant || 0}`}
+            {state.variable === 'None' ? '---' : 'LOCKED'}
           </div>
         </div>
       </div>
@@ -163,7 +152,7 @@ export default function FormulasPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle>Logic Builder</CardTitle>
-                    <CardDescription>Configure calculation rules. Profiles without formulas won't show in orders.</CardDescription>
+                    <CardDescription>Configure calculation rules. Once saved, logic cannot be deleted.</CardDescription>
                   </div>
                   <Tabs value={activeType} onValueChange={(v: any) => setActiveType(v)}>
                     <TabsList>
@@ -211,7 +200,7 @@ export default function FormulasPage() {
             <Card className="border-none shadow-lg bg-card">
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <LayoutGrid className="h-4 w-4 text-accent" /> Active Formulas
+                  <LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -224,23 +213,12 @@ export default function FormulasPage() {
                       </div>
                     ) : (
                       configuredSections.map(s => (
-                        <div key={s.id} className="p-3 bg-muted/20 rounded-lg border border-border/50 text-[11px] space-y-2 group relative">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-accent">{s.name}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-5 w-5 text-destructive opacity-0 group-hover:opacity-100"
-                              onClick={() => handleClearFormula(s.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                        <div key={s.id} className="p-3 bg-muted/20 rounded-lg border border-border/50 flex items-center justify-between group">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className="h-3 w-3 text-green-500" />
+                            <span className="font-bold text-accent text-xs">{s.name}</span>
                           </div>
-                          <div className="grid grid-cols-3 gap-1 opacity-70">
-                            <div className="truncate">T: {s.top_formula}</div>
-                            <div className="truncate">B: {s.bottom_formula}</div>
-                            <div className="truncate">S: {s.side_formula}</div>
-                          </div>
+                          <Badge variant="outline" className="text-[8px] opacity-50 uppercase">Locked</Badge>
                         </div>
                       ))
                     )}

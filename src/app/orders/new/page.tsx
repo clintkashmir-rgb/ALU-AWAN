@@ -39,7 +39,6 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
-  // Strictly only show sections that have a formula set (Not None)
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -113,7 +112,7 @@ export default function NewOrderPage() {
       toast({ 
         variant: "destructive", 
         title: "No Formulas Found", 
-        description: "Please go to Formula Builder and add logic to your profiles first." 
+        description: "Please go to Formula Builder and add logic first." 
       })
       return
     }
@@ -232,7 +231,7 @@ export default function NewOrderPage() {
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Formula: W &times; H &times; Q = Total Sqft</span>
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Calculation: W &times; H &times; Q = Total Sqft</span>
                       <span className="text-xl font-black text-accent">{width} &times; {height} &times; {qty} = {glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
@@ -251,7 +250,7 @@ export default function NewOrderPage() {
 
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison (Strict Formula Mode)</CardTitle>
+                  <CardTitle className="text-sm font-black uppercase tracking-widest">Section Comparison</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <Table>
