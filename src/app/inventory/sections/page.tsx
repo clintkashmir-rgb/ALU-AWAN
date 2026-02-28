@@ -9,14 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Search, MoreVertical, Edit2, Trash2, Layers } from "lucide-react"
+import { Plus, Search, MoreVertical, Trash2, Layers } from "lucide-react"
 import { Section } from "@/lib/types"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { useCollection, useFirestore } from "@/firebase"
-import { collection, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore"
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase"
+import { collection, doc } from "firebase/firestore"
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 
 export default function SectionsPage() {
   const { toast } = useToast()
@@ -24,10 +25,13 @@ export default function SectionsPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   
-  // Firestore data
-  const { data: sections, loading } = useCollection<Section>(
-    firestore ? collection(firestore, "sections") : null
-  )
+  // Properly memoized Firestore query
+  const sectionsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, "sections");
+  }, [firestore]);
+
+  const { data: sections, isLoading: loading } = useCollection<Section>(sectionsQuery);
 
   const [currentSection, setCurrentSection] = React.useState<Partial<Section>>({
     name: "",
@@ -43,37 +47,35 @@ export default function SectionsPage() {
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   ) || []
 
-  const handleSaveSection = async () => {
-    if (!currentSection.name) {
+  const handleSaveSection = () => {
+    if (!currentSection.name || !firestore) {
       toast({ variant: "destructive", title: "Missing Info", description: "Section name is required." })
       return
     }
 
-    try {
-      await addDoc(collection(firestore, "sections"), currentSection)
-      setIsDialogOpen(false)
-      setCurrentSection({
-        name: "",
-        type: "Sliding",
-        top_formula: "Width + 0",
-        bottom_formula: "Width + 0",
-        side_formula: "Height + 0",
-        weight_per_ft: 0.4,
-        rate_per_ft: 220
-      })
-      toast({ title: "Section Added", description: `${currentSection.name} saved online.` })
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error Saving" })
-    }
+    addDocumentNonBlocking(collection(firestore, "sections"), {
+      ...currentSection,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+
+    setIsDialogOpen(false)
+    setCurrentSection({
+      name: "",
+      type: "Sliding",
+      top_formula: "Width + 0",
+      bottom_formula: "Width + 0",
+      side_formula: "Height + 0",
+      weight_per_ft: 0.4,
+      rate_per_ft: 220
+    })
+    toast({ title: "Section Added", description: `${currentSection.name} saved online.` })
   }
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteDoc(doc(firestore, "sections", id))
-      toast({ title: "Section Deleted" })
-    } catch (e) {
-      toast({ variant: "destructive", title: "Delete Failed" })
-    }
+  const handleDelete = (id: string) => {
+    if (!firestore) return;
+    deleteDocumentNonBlocking(doc(firestore, "sections", id));
+    toast({ title: "Section Deleted" })
   }
 
   return (

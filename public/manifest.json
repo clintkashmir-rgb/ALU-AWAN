@@ -1,3 +1,4 @@
+
 {
   "name": "Awan Aluminum Manager",
   "short_name": "Awan Manager",
@@ -5,15 +6,15 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#262B2F",
-  "theme_color": "#33CCCE",
+  "theme_color": "#546C82",
   "icons": [
     {
-      "src": "https://picsum.photos/seed/awan/192/192",
+      "src": "https://picsum.photos/seed/pwa/192/192",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://picsum.photos/seed/awan/512/512",
+      "src": "https://picsum.photos/seed/pwa/512/512",
       "sizes": "512x512",
       "type": "image/png"
     }

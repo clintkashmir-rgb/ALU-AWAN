@@ -1,12 +1,8 @@
+
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  console.log('Service Worker installed');
 });
 
 self.addEventListener('fetch', (event) => {
-  // basic offline support strategy
-  event.respondWith(
-    fetch(event.request).catch(() => {
-      return caches.match(event.request);
-    })
-  );
+  // Pass through fetch events
 });
