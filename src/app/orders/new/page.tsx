@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calculator, Save, CheckCircle, Ruler } from "lucide-react"
+import { Calculator, Save, CheckCircle, Ruler, AlertTriangle } from "lucide-react"
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { collection, serverTimestamp } from "firebase/firestore"
@@ -42,7 +42,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
-  // Filter sections that have at least one formula configured
+  // STRICT FILTER: Only show sections that have at least one formula part configured
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -114,6 +114,16 @@ export default function NewOrderPage() {
       toast({ variant: "destructive", title: "Inputs Required", description: "Enter Width, Height and Qty." })
       return
     }
+    
+    if (configuredSections.length === 0) {
+      toast({ 
+        variant: "destructive", 
+        title: "No Formulas Found", 
+        description: "Please go to Formula Builder and add logic to your profiles first." 
+      })
+      return
+    }
+    
     setShowResults(true)
   }
 
@@ -194,7 +204,18 @@ export default function NewOrderPage() {
                 </div>
               </div>
 
-              <Button onClick={handleCalculate} className="w-full h-14 text-lg font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2 mt-4">
+              {configuredSections.length === 0 && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2 text-destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <p className="text-xs font-bold">No profile formulas set. Go to Inventory > Formulas first.</p>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleCalculate} 
+                className="w-full h-14 text-lg font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2 mt-4"
+                disabled={configuredSections.length === 0}
+              >
                 <CheckCircle className="h-6 w-6" /> OK - CALCULATE
               </Button>
             </CardContent>
