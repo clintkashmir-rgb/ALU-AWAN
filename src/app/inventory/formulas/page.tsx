@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calculator, Save, RefreshCcw, LayoutGrid, AlertTriangle, CheckCircle2, Lock } from "lucide-react"
+import { Calculator, Save, RefreshCcw, LayoutGrid, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -74,8 +74,21 @@ export default function FormulasPage() {
     
     toast({ 
       title: "Logic Saved", 
-      description: `Formula updated for ${currentSection.name}. Logic is now locked.` 
+      description: `Formula updated for ${currentSection.name}.` 
     })
+  }
+
+  const handleDeleteFormula = (sectionId: string) => {
+    if (!firestore) return;
+    
+    updateDocumentNonBlocking(doc(firestore, "sections", sectionId), {
+      top_formula: "None",
+      bottom_formula: "None",
+      side_formula: "None",
+      updatedAt: new Date().toISOString()
+    });
+
+    toast({ title: "Logic Deleted", description: "Formula has been reset to start." });
   }
 
   const FormulaRow = ({ label, state, setState }: any) => {
@@ -128,7 +141,7 @@ export default function FormulasPage() {
     )
   }
 
-  // List of sections that have active formulas (Locked Status)
+  // List of sections that have active formulas
   const configuredSections = sections?.filter(s => 
     (s.top_formula && s.top_formula !== 'None') || 
     (s.bottom_formula && s.bottom_formula !== 'None') || 
@@ -153,7 +166,7 @@ export default function FormulasPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle>Logic Builder</CardTitle>
-                    <CardDescription>Configure rules. Once saved, logic cannot be deleted.</CardDescription>
+                    <CardDescription>Configure rules for selected profiles.</CardDescription>
                   </div>
                   <Tabs value={activeType} onValueChange={(v: any) => setActiveType(v)}>
                     <TabsList>
@@ -190,10 +203,10 @@ export default function FormulasPage() {
                   setBottomFormula({ variable: "Width", operator: "+", constant: "0" })
                   setSideFormula({ variable: "Height", operator: "+", constant: "0" })
                 }}>
-                  <RefreshCcw className="h-3 w-3" /> Reset
+                  <RefreshCcw className="h-3 w-3" /> Reset UI
                 </Button>
                 <Button onClick={handleSave} className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 px-8">
-                  <Save className="h-4 w-4" /> Save & Lock
+                  <Save className="h-4 w-4" /> Save Logic
                 </Button>
               </CardFooter>
             </Card>
@@ -219,7 +232,14 @@ export default function FormulasPage() {
                             <CheckCircle2 className="h-3 w-3 text-green-500" />
                             <span className="font-bold text-accent text-xs">{s.name}</span>
                           </div>
-                          <Lock className="h-3 w-3 text-muted-foreground opacity-50" />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleDeleteFormula(s.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
                       ))
                     )}
