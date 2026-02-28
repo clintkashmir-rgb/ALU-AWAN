@@ -93,7 +93,8 @@ export default function NewOrderPage() {
       })
   }, [width, height, qty, sections, windowType, showResults])
 
-  const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
+  const selectedProfileAmount = comparisonData[0]?.amount || 0
+  const grandTotal = Math.round((glassAmount + selectedProfileAmount) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
     if (!width || !height || !qty) {
@@ -120,6 +121,7 @@ export default function NewOrderPage() {
         height: parseFloat(height),
         qty: parseInt(qty),
         type: windowType,
+        glassSqFt,
         glassAmount,
         netAmount: grandTotal,
         status: "Paid",

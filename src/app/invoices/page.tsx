@@ -4,34 +4,34 @@
 import * as React from "react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, FileText, Download, Printer, MoreVertical, LayoutList } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useCollection } from "@/firebase"
-import { collection, query, orderBy, Firestore } from "firebase/firestore"
+import { useCollection, useMemoFirebase } from "@/firebase"
+import { collection, query, orderBy } from "firebase/firestore"
 import { useFirestore } from "@/firebase/provider"
 
 export default function InvoicesPage() {
   const [searchTerm, setSearchTerm] = React.useState("")
   const firestore = useFirestore()
   
-  const ordersQuery = React.useMemo(() => {
+  const invoicesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, "orders"), orderBy("date", "desc"));
+    return query(collection(firestore, "invoices"), orderBy("timestamp", "desc"));
   }, [firestore]);
 
-  const { data: orders, loading } = useCollection(ordersQuery);
+  const { data: invoices, isLoading: loading } = useCollection(invoicesQuery);
 
-  const filteredOrders = React.useMemo(() => {
-    if (!orders) return [];
-    return orders.filter(o => 
+  const filteredInvoices = React.useMemo(() => {
+    if (!invoices) return [];
+    return invoices.filter(o => 
       o.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [orders, searchTerm]);
+  }, [invoices, searchTerm]);
 
   return (
     <SidebarProvider>
@@ -77,9 +77,9 @@ export default function InvoicesPage() {
                 <TableBody>
                   {loading ? (
                     <TableRow><TableCell colSpan={5} className="text-center py-12 opacity-50">Loading history...</TableCell></TableRow>
-                  ) : filteredOrders.length === 0 ? (
+                  ) : filteredInvoices.length === 0 ? (
                     <TableRow><TableCell colSpan={5} className="text-center py-12 opacity-50">No orders found.</TableCell></TableRow>
-                  ) : filteredOrders.map((inv) => (
+                  ) : filteredInvoices.map((inv) => (
                     <TableRow key={inv.id} className="hover:bg-muted/5 transition-colors">
                       <TableCell className="font-medium">{inv.customerName}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{inv.date}</TableCell>
