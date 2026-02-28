@@ -141,7 +141,6 @@ export default function FormulasPage() {
     )
   }
 
-  // List of sections that have active formulas
   const configuredSections = sections?.filter(s => 
     (s.top_formula && s.top_formula !== 'None') || 
     (s.bottom_formula && s.bottom_formula !== 'None') || 

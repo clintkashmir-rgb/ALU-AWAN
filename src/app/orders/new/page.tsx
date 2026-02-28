@@ -85,14 +85,13 @@ export default function NewOrderPage() {
     const w = parseFloat(width) || 0
     const h = parseFloat(height) || 0
     const q = parseInt(qty) || 0
-    const p = parseInt(palla) || 2
 
     return configuredSections.map(s => {
       const top = evaluateFormula(s.top_formula, w, h)
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
-      // Standard frame logic: Top + Bottom + 2 Sides (Adjusted for Palla if needed in future)
+      // Industrial logic: Top + Bottom + 2 Sides
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -104,7 +103,7 @@ export default function NewOrderPage() {
         amount: Math.round(totalFt * rate)
       }
     })
-  }, [width, height, qty, palla, configuredSections, showResults])
+  }, [width, height, qty, configuredSections, showResults])
 
   const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
@@ -219,7 +218,7 @@ export default function NewOrderPage() {
                   <AlertTriangle className="h-6 w-6" />
                   <p className="text-[10px] font-black uppercase text-center">
                     Attention: No formulas added!<br/>
-                    Please add logic in Inventory &gt; Formulas first.
+                    Please add logic in Formula Builder first.
                   </p>
                 </div>
               )}
