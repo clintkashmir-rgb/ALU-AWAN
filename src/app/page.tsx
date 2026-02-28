@@ -8,10 +8,10 @@ import Link from "next/link";
 
 export default function DashboardPage() {
   const stats = [
-    { label: "Total Invoices", value: "128", icon: FileText, color: "text-blue-500" },
-    { label: "Total Revenue", value: "PKR 4.2M", icon: TrendingUp, color: "text-green-500" },
-    { label: "Active Customers", value: "45", icon: Users, color: "text-purple-500" },
-    { label: "Pending Orders", value: "12", icon: PlusCircle, color: "text-orange-500" },
+    { label: "Total Invoices", value: "0", icon: FileText, color: "text-blue-500" },
+    { label: "Total Revenue", value: "PKR 0.00", icon: TrendingUp, color: "text-green-500" },
+    { label: "Active Customers", value: "0", icon: Users, color: "text-purple-500" },
+    { label: "Pending Orders", value: "0", icon: PlusCircle, color: "text-orange-500" },
   ];
 
   return (
@@ -41,22 +41,12 @@ export default function DashboardPage() {
             <Card className="col-span-1 md:col-span-2 border-none shadow-md">
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest window orders and invoice generation.</CardDescription>
+                <CardDescription>No recent activity recorded.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">Ahmed Khan</p>
-                        <p className="text-[10px] text-muted-foreground uppercase">#AW-2024-00{i} • 2h ago</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-accent">PKR 45,000</p>
-                        <p className="text-[10px] text-green-500 font-bold uppercase">Paid</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-40">
+                  <FileText className="h-12 w-12 mb-4" />
+                  <p className="text-sm font-medium">History is clean.</p>
                 </div>
               </CardContent>
             </Card>
@@ -66,7 +56,7 @@ export default function DashboardPage() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button className="w-full justify-start gap-3 h-12" asChild>
+                <Button className="w-full justify-start gap-3 h-12 bg-accent text-accent-foreground hover:bg-accent/90" asChild>
                   <Link href="/orders/new">
                     <PlusCircle className="h-5 w-5" />
                     New Window Order
