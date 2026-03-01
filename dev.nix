@@ -1,43 +1,27 @@
 
-# To learn more about how to use Nix to configure your environment
-# see: https://developers.google.com/idx/guides/customize-idx-env
 { pkgs, ... }: {
-  # Which nixpkgs channel to use.
-  channel = "stable-24.05"; # or "unstable"
-  # Use https://search.nixos.org/packages to find packages
+  channel = "stable-24.05";
   packages = [
     pkgs.nodejs_20
-    pkgs.zulu17
-    pkgs.python3
+    pkgs.zulu
+    pkgs.nodePackages.npm
+    pkgs.firebase-tools
   ];
-  # Sets environment variables in the workspace
-  env = {};
+  env = {
+    FIREBASE_PROJECT = "studio-5816171861-9dff2";
+  };
   idx = {
-    # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [
-      "esbenp.prettier-vscode"
+      "dsznajder.es7-react-js-snippets"
       "bradlc.vscode-tailwindcss"
     ];
-    # Enable previews and customize configuration
     previews = {
       enable = true;
       previews = {
         web = {
-          command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
+          command = ["npm", "run", "dev", "--", "--port", "$PORT", "--hostname", "0.0.0.0"];
           manager = "web";
         };
-      };
-    };
-    # Workspace lifecycle hooks
-    workspace = {
-      # Runs when a workspace is first created
-      onCreate = {
-        npm-install = "npm install";
-      };
-      # Runs when the workspace is (re)started
-      onStart = {
-        # Optional: Start emulators if needed for local development
-        # firebase-emulators = "firebase emulators:start --only firestore,auth";
       };
     };
   };

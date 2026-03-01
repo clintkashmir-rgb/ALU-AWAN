@@ -9,7 +9,6 @@ import { WindowDrawing } from '@/components/WindowDrawing';
 import { Printer, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// Helper component to handle search params in a Suspense boundary
 function PrintContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
@@ -17,16 +16,16 @@ function PrintContent() {
   const firestore = useFirestore();
   
   const docRef = useMemoFirebase(() => (id ? doc(firestore, 'invoices', id) : null), [firestore, id]);
-  const { data: invoice, isLoading } = useDoc(invoiceRef => docRef);
+  const { data: invoice, isLoading } = useDoc(docRef);
 
+  if (!id) return <div className="p-20 text-center text-destructive font-bold uppercase">ERROR: NO INVOICE ID PROVIDED.</div>;
   if (isLoading) return <div className="p-20 text-center font-black animate-pulse text-2xl uppercase tracking-widest">GENERATING INDUSTRIAL PRINT VIEW...</div>;
-  if (!invoice) return <div className="p-20 text-center text-destructive font-bold">INVOICE DATA NOT FOUND. PLEASE CHECK ID.</div>;
+  if (!invoice) return <div className="p-20 text-center text-destructive font-bold uppercase">INVOICE DATA NOT FOUND. PLEASE CHECK ID.</div>;
 
   return (
     <div className="min-h-screen bg-white text-black p-4 md:p-10 font-sans selection:bg-accent/30">
-      {/* Action Bar - Hidden on Print */}
       <div className="max-w-4xl mx-auto mb-8 flex justify-between items-center print:hidden bg-slate-100 p-4 rounded-2xl border shadow-sm">
-        <Button variant="ghost" onClick={() => router.back()} className="gap-2 font-bold hover:bg-white">
+        <Button variant="ghost" onClick={() => router.back()} className="gap-2 font-bold hover:bg-white text-black">
           <ArrowLeft className="h-4 w-4" /> BACK
         </Button>
         <Button onClick={() => window.print()} className="bg-black text-white hover:bg-black/90 gap-2 font-bold px-6">
@@ -34,18 +33,16 @@ function PrintContent() {
         </Button>
       </div>
 
-      {/* Invoice Document */}
       <div className="max-w-4xl mx-auto border-[3px] border-black p-8 md:p-12 relative overflow-hidden bg-white">
         <div className="absolute top-0 right-0 w-32 h-32 bg-black text-white flex items-center justify-center -rotate-45 translate-x-12 -translate-y-12 font-black text-xs">
           ORIGINAL
         </div>
 
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start border-b-[3px] border-black pb-8 mb-8 gap-6">
           <div>
             <h1 className="text-5xl font-black uppercase tracking-tighter leading-none mb-2">AWAN ALUMINUM</h1>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Industrial Fabrication & Management</p>
-            <div className="mt-6 space-y-1 text-xs font-medium">
+            <div className="mt-6 space-y-1 text-xs font-medium text-black">
               <p>Main Industrial Area, Sector 4-B</p>
               <p>Contact: +92 3XX XXXXXXX</p>
               <p>Email: contact@awan-aluminum.com</p>
@@ -56,43 +53,41 @@ function PrintContent() {
               INVOICE
             </div>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Invoice ID</p>
-            <p className="font-mono font-bold text-lg mb-4">#{id ? id.slice(0, 8).toUpperCase() : 'N/A'}</p>
+            <p className="font-mono font-bold text-lg mb-4 text-black">#{id.slice(0, 8).toUpperCase()}</p>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Issue Date</p>
-            <p className="font-bold">{invoice.date || '---'}</p>
+            <p className="font-bold text-black">{invoice.date || '---'}</p>
           </div>
         </div>
 
-        {/* Customer Block */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
           <div>
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-2 border-b border-slate-200 pb-1">Billed To</h3>
             <p className="text-2xl font-black uppercase text-black">{invoice.customerName || "Walk-in Customer"}</p>
-            <p className="text-sm font-medium mt-1 text-slate-600">Client Reference: INV-{id ? id.slice(-4).toUpperCase() : 'N/A'}</p>
+            <p className="text-sm font-medium mt-1 text-slate-600">Client Reference: INV-{id.slice(-4).toUpperCase()}</p>
           </div>
           <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3">Specification Breakdown</h3>
             <div className="grid grid-cols-2 gap-y-3">
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Configuration</p>
-                <p className="text-xs font-black">{invoice.type || '---'} • {invoice.palla || '2'} Palla</p>
+                <p className="text-xs font-black text-black">{invoice.type || '---'} • {invoice.palla || '2'} Palla</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Quantity</p>
-                <p className="text-xs font-black">{invoice.qty || '1'} Units</p>
+                <p className="text-xs font-black text-black">{invoice.qty || '1'} Units</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Width</p>
-                <p className="text-xs font-black">{invoice.width || '0'} ft</p>
+                <p className="text-xs font-black text-black">{invoice.width || '0'} ft</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Height</p>
-                <p className="text-xs font-black">{invoice.height || '0'} ft</p>
+                <p className="text-xs font-black text-black">{invoice.height || '0'} ft</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Technical Drawing & Glass Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-white border-2 border-black p-6 flex flex-col items-center justify-center rounded-sm">
             <WindowDrawing width={Number(invoice.width) || 4} height={Number(invoice.height) || 4} type={invoice.type || 'Sliding'} className="scale-110" />
@@ -100,17 +95,16 @@ function PrintContent() {
           <div className="flex flex-col justify-center space-y-6">
             <div className="border-l-[4px] border-black pl-6">
               <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Glass Calculation</h4>
-              <p className="text-3xl font-black leading-none">{invoice.glassSqFt || '0'} <span className="text-sm">SQFT</span></p>
+              <p className="text-3xl font-black leading-none text-black">{invoice.glassSqFt || '0'} <span className="text-sm">SQFT</span></p>
               <p className="text-xs font-bold text-slate-500 mt-1">Total area processed across {invoice.qty || '1'} units.</p>
             </div>
             <div className="border-l-[4px] border-black pl-6 opacity-80">
               <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Industrial Standards</h4>
-              <p className="text-xs font-bold leading-relaxed">Calculated using dynamic section formulas for Top, Bottom, and Side frame profiles as configured in the master system.</p>
+              <p className="text-xs font-bold leading-relaxed text-black">Calculated using dynamic section formulas for Top, Bottom, and Side frame profiles as configured in the master system.</p>
             </div>
           </div>
         </div>
 
-        {/* Billing Table */}
         <div className="mb-12">
           <div className="w-full border-[2px] border-black">
             <div className="bg-black text-white p-3 flex justify-between font-black text-xs uppercase tracking-widest">
@@ -119,25 +113,24 @@ function PrintContent() {
             </div>
             <div className="p-4 flex justify-between items-center border-b border-black/10">
               <div className="space-y-1">
-                <p className="font-black text-sm uppercase">Custom Window Fabrication</p>
+                <p className="font-black text-sm uppercase text-black">Custom Window Fabrication</p>
                 <p className="text-[10px] font-medium text-slate-500">Aluminum Profiles + Glass + Hardware + Labor</p>
               </div>
-              <p className="font-black text-lg">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p>
+              <p className="font-black text-lg text-black">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
 
-        {/* Footer Summary */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 pt-8 border-t-[3px] border-black">
           <div className="max-w-xs">
-            <h5 className="text-[10px] font-black uppercase mb-3">Notice:</h5>
+            <h5 className="text-[10px] font-black uppercase mb-3 text-black">Notice:</h5>
             <p className="text-[9px] leading-relaxed font-medium text-slate-500 italic">
               * This is a computer-generated invoice based on industrial aluminum calculation algorithms. Please verify dimensions before installation. Awan Aluminum is not responsible for errors in provided measurements.
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Net Total Amount</p>
-            <h2 className="text-6xl font-black tracking-tighter leading-none">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2>
+            <h2 className="text-6xl font-black tracking-tighter leading-none text-black">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2>
             <div className="mt-4 flex items-center justify-end gap-2 text-green-600">
               <div className="h-2 w-2 rounded-full bg-green-600" />
               <p className="text-[10px] font-black uppercase">Payment Received / Full Settlement</p>
@@ -145,13 +138,12 @@ function PrintContent() {
           </div>
         </div>
 
-        {/* Signatures */}
         <div className="mt-24 grid grid-cols-2 gap-20">
           <div className="text-center">
-            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px]">Customer Acknowledgement</div>
+            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px] text-black">Customer Acknowledgement</div>
           </div>
           <div className="text-center">
-            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px]">Authorized Signature</div>
+            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px] text-black">Authorized Signature</div>
           </div>
         </div>
       </div>
@@ -161,6 +153,7 @@ function PrintContent() {
           body {
             background: white !important;
             padding: 0 !important;
+            color: black !important;
           }
           .print-hidden {
             display: none !important;
@@ -176,7 +169,7 @@ function PrintContent() {
 
 export default function PrintInvoicePage() {
   return (
-    <React.Suspense fallback={<div className="p-20 text-center font-black animate-pulse">LOADING PRINT VIEW...</div>}>
+    <React.Suspense fallback={<div className="p-20 text-center font-black animate-pulse uppercase">LOADING PRINT VIEW...</div>}>
       <PrintContent />
     </React.Suspense>
   );

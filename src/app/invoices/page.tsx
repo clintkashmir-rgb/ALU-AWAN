@@ -36,7 +36,6 @@ export default function InvoicesPage() {
   }, [invoices, searchTerm]);
 
   const handlePrint = (id: string) => {
-    // Corrected to use search params to fix build error
     router.push(`/invoices/print?id=${id}`);
   }
 
