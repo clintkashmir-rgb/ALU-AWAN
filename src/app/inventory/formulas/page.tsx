@@ -160,7 +160,6 @@ export default function FormulasPage() {
         </header>
 
         <main className="flex-1 p-4 md:p-6 space-y-8 max-w-4xl mx-auto">
-          {/* Logic Builder */}
           <Card className="border-none shadow-xl overflow-hidden">
             <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
@@ -211,7 +210,6 @@ export default function FormulasPage() {
             </CardFooter>
           </Card>
 
-          {/* Active Profiles List at Bottom */}
           <Card className="border-none shadow-lg bg-card overflow-hidden">
             <CardHeader className="bg-muted/30 border-b">
               <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
@@ -223,7 +221,7 @@ export default function FormulasPage() {
                 <div className="p-6">
                   {configuredSections.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-40">
-                      <AlertTriangle className="h-12 w-12 mb-4" />
+                      <AlertTriangle className="h-12 w-12 mb-4 text-destructive" />
                       <p className="text-sm font-bold uppercase tracking-tight">No active formulas found.</p>
                       <p className="text-xs mt-1">Configure a profile above to activate it.</p>
                     </div>

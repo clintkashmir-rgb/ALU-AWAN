@@ -91,7 +91,6 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
-      // Total Ft = (Top + Bottom + 2*Side) * Qty
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
