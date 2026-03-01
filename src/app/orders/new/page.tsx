@@ -3,13 +3,13 @@
 import * as React from "react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Calculator, Save, CheckCircle, Ruler, AlertTriangle } from "lucide-react"
+import { Save, CheckCircle, AlertTriangle } from "lucide-react"
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { collection, serverTimestamp } from "firebase/firestore"
@@ -47,7 +47,6 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
-  // Strict filtering: Only sections with configured formulas
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -89,7 +88,6 @@ export default function NewOrderPage() {
       const top = evaluateFormula(s.top_formula, w, h)
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
-      // Standard industrial feet calculation
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       return { 
@@ -107,11 +105,11 @@ export default function NewOrderPage() {
 
   const handleCalculate = () => {
     if (!width || !height || !qty) {
-      toast({ variant: "destructive", title: "Missing Inputs", description: "Please enter width, height and quantity." })
+      toast({ variant: "destructive", title: "Missing Inputs" })
       return
     }
     if (configuredSections.length === 0) {
-      toast({ variant: "destructive", title: "No Formulas Found", description: "Please set logic in Formula Builder first." })
+      toast({ variant: "destructive", title: "No Logic Found", description: "Set formulas in Formula Builder first." })
       return
     }
     setShowResults(true)
@@ -137,7 +135,7 @@ export default function NewOrderPage() {
       timestamp: serverTimestamp()
     });
 
-    toast({ title: "Order Saved", description: `Transaction for ${customerName} recorded.` })
+    toast({ title: "Order Saved" })
     router.push("/")
   }
 
@@ -158,19 +156,12 @@ export default function NewOrderPage() {
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Customer Name</Label>
-                  <Input 
-                    placeholder="Enter Name..." 
-                    className="h-11" 
-                    value={customerName} 
-                    onChange={e => setCustomerName(e.target.value)} 
-                  />
+                  <Input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Name..." />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Type</Label>
                   <Select value={windowType} onValueChange={(v: any) => { setWindowType(v); setShowResults(false); }}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Sliding">Sliding</SelectItem>
                       <SelectItem value="Fixed">Fixed</SelectItem>
@@ -179,30 +170,16 @@ export default function NewOrderPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Width (ft)</Label>
-                  <Input 
-                    type="number" 
-                    step="any" 
-                    className="h-11 text-center font-bold" 
-                    value={width} 
-                    onChange={e => { setWidth(e.target.value); setShowResults(false); }} 
-                  />
+                  <Input type="number" step="any" className="font-bold text-center" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Height (ft)</Label>
-                  <Input 
-                    type="number" 
-                    step="any" 
-                    className="h-11 text-center font-bold" 
-                    value={height} 
-                    onChange={e => { setHeight(e.target.value); setShowResults(false); }} 
-                  />
+                  <Input type="number" step="any" className="font-bold text-center" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Palla</Label>
                   <Select value={palla} onValueChange={(v) => { setPalla(v); setShowResults(false); }}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="2">2 Palla</SelectItem>
                       <SelectItem value="3">3 Palla</SelectItem>
@@ -212,27 +189,18 @@ export default function NewOrderPage() {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Qty</Label>
-                  <Input 
-                    type="number" 
-                    className="h-11 text-center font-bold" 
-                    value={qty} 
-                    onChange={e => { setQty(e.target.value); setShowResults(false); }} 
-                  />
+                  <Input type="number" className="font-bold text-center" value={qty} onChange={e => { setQty(e.target.value); setShowResults(false); }} />
                 </div>
               </div>
 
               {configuredSections.length === 0 && (
                 <div className="p-4 bg-destructive/10 border border-dashed border-destructive/30 rounded-xl flex flex-col items-center justify-center gap-2 text-destructive">
                   <AlertTriangle className="h-6 w-6" />
-                  <p className="text-[10px] font-black uppercase">Please add logic in Formula Builder first.</p>
+                  <p className="text-[10px] font-black uppercase">Set formulas in Formula Builder first.</p>
                 </div>
               )}
 
-              <Button 
-                onClick={handleCalculate} 
-                className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2"
-                disabled={configuredSections.length === 0}
-              >
+              <Button onClick={handleCalculate} className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2" disabled={configuredSections.length === 0}>
                 <CheckCircle className="h-5 w-5" /> OK - CALCULATE
               </Button>
             </CardContent>
@@ -253,12 +221,7 @@ export default function NewOrderPage() {
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Rate (/Sqft)</Label>
-                        <Input 
-                          type="number" 
-                          className="h-10 text-lg font-black" 
-                          value={glassRate} 
-                          onChange={e => setGlassRate(e.target.value)} 
-                        />
+                        <Input type="number" className="font-black" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
                       </div>
                       <div className="text-right space-y-1">
                         <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Total</Label>
@@ -272,14 +235,7 @@ export default function NewOrderPage() {
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead>Profile</TableHead>
-                        <TableHead className="text-right">Total Ft</TableHead>
-                        <TableHead className="text-right">Rate</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow className="bg-muted/50"><TableHead>Profile</TableHead><TableHead className="text-right">Total Ft</TableHead><TableHead className="text-right">Rate</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {comparisonData.map(s => (
                         <TableRow key={s.id} className="hover:bg-muted/10">
@@ -296,22 +252,14 @@ export default function NewOrderPage() {
 
               <div className="flex flex-col md:flex-row items-end justify-between bg-card p-6 rounded-2xl shadow-2xl border gap-6">
                 <div className="w-full md:w-40 space-y-2">
-                  <Label className="text-[8px] uppercase font-black tracking-widest">Discount (%)</Label>
-                  <Input 
-                    type="number" 
-                    value={discountPercent} 
-                    onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} 
-                    className="h-10 text-lg font-bold" 
-                  />
+                  <Label className="text-[8px] uppercase font-black">Discount (%)</Label>
+                  <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} />
                 </div>
                 <div className="text-right flex-1">
                   <p className="text-[8px] uppercase font-black text-muted-foreground">Grand Total</p>
                   <p className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</p>
                 </div>
-                <Button 
-                  onClick={handleSaveOrder} 
-                  className="h-14 px-10 bg-primary text-primary-foreground text-lg font-black rounded-xl shadow-xl gap-2"
-                >
+                <Button onClick={handleSaveOrder} className="h-14 px-10 bg-primary text-primary-foreground text-lg font-black rounded-xl shadow-xl gap-2">
                   <Save className="h-5 w-5" /> SAVE ORDER
                 </Button>
               </div>

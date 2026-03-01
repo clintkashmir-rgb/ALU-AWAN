@@ -17,7 +17,7 @@ export default function PrintInvoicePage() {
   const docRef = useMemoFirebase(() => (id ? doc(firestore, 'invoices', id) : null), [firestore, id]);
   const { data: invoice, isLoading } = useDoc(docRef);
 
-  if (isLoading) return <div className="p-20 text-center font-black animate-pulse text-white">GENERATING PRINT VIEW...</div>;
+  if (isLoading) return <div className="p-20 text-center font-black animate-pulse">GENERATING PRINT VIEW...</div>;
   if (!invoice) return <div className="p-20 text-center text-destructive font-bold">INVOICE DATA NOT FOUND.</div>;
 
   return (
@@ -32,24 +32,15 @@ export default function PrintInvoicePage() {
       </div>
 
       <div className="max-w-4xl mx-auto border-[3px] border-black p-8 md:p-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-black text-white flex items-center justify-center -rotate-45 translate-x-12 -translate-y-12 font-black text-xs">
-          ORIGINAL
-        </div>
-
+        <div className="absolute top-0 right-0 w-32 h-32 bg-black text-white flex items-center justify-center -rotate-45 translate-x-12 -translate-y-12 font-black text-xs">ORIGINAL</div>
         <div className="flex flex-col md:flex-row justify-between items-start border-b-[3px] border-black pb-8 mb-8 gap-6">
           <div>
             <h1 className="text-5xl font-black uppercase tracking-tighter leading-none mb-2">AWAN ALUMINUM</h1>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Industrial Fabrication & Management</p>
-            <div className="mt-6 space-y-1 text-xs font-medium">
-              <p>Main Industrial Area, Sector 4-B</p>
-              <p>Contact: +92 3XX XXXXXXX</p>
-              <p>Email: contact@awan-aluminum.com</p>
-            </div>
+            <div className="mt-6 space-y-1 text-xs font-medium"><p>Main Industrial Area, Sector 4-B</p><p>Contact: +92 3XX XXXXXXX</p></div>
           </div>
           <div className="md:text-right flex flex-col md:items-end">
-            <div className="bg-black text-white px-4 py-2 mb-4 font-black uppercase text-xl inline-block">
-              INVOICE
-            </div>
+            <div className="bg-black text-white px-4 py-2 mb-4 font-black uppercase text-xl inline-block">INVOICE</div>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Invoice ID</p>
             <p className="font-mono font-bold text-lg mb-4">#{id ? id.slice(0, 8).toUpperCase() : 'N/A'}</p>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Issue Date</p>
@@ -61,27 +52,14 @@ export default function PrintInvoicePage() {
           <div>
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-2 border-b border-slate-200 pb-1">Billed To</h3>
             <p className="text-2xl font-black uppercase text-black">{invoice.customerName || "Walk-in Customer"}</p>
-            <p className="text-sm font-medium mt-1 text-slate-600">Client Reference: INV-{id ? id.slice(-4).toUpperCase() : 'N/A'}</p>
           </div>
           <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3">Specification Breakdown</h3>
             <div className="grid grid-cols-2 gap-y-3">
-              <div className="space-y-0.5">
-                <p className="text-[8px] font-bold text-slate-500 uppercase">Configuration</p>
-                <p className="text-xs font-black">{invoice.type || '---'} • {invoice.palla || '2'} Palla</p>
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[8px] font-bold text-slate-500 uppercase">Quantity</p>
-                <p className="text-xs font-black">{invoice.qty || '1'} Units</p>
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[8px] font-bold text-slate-500 uppercase">Width</p>
-                <p className="text-xs font-black">{invoice.width || '0'} ft</p>
-              </div>
-              <div className="space-y-0.5">
-                <p className="text-[8px] font-bold text-slate-500 uppercase">Height</p>
-                <p className="text-xs font-black">{invoice.height || '0'} ft</p>
-              </div>
+              <div className="space-y-0.5"><p className="text-[8px] font-bold text-slate-500 uppercase">Configuration</p><p className="text-xs font-black">{invoice.type || '---'} • {invoice.palla || '2'} Palla</p></div>
+              <div className="space-y-0.5"><p className="text-[8px] font-bold text-slate-500 uppercase">Quantity</p><p className="text-xs font-black">{invoice.qty || '1'} Units</p></div>
+              <div className="space-y-0.5"><p className="text-[8px] font-bold text-slate-500 uppercase">Width</p><p className="text-xs font-black">{invoice.width || '0'} ft</p></div>
+              <div className="space-y-0.5"><p className="text-[8px] font-bold text-slate-500 uppercase">Height</p><p className="text-xs font-black">{invoice.height || '0'} ft</p></div>
             </div>
           </div>
         </div>
@@ -94,72 +72,18 @@ export default function PrintInvoicePage() {
             <div className="border-l-[4px] border-black pl-6">
               <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Glass Calculation</h4>
               <p className="text-3xl font-black leading-none">{invoice.glassSqFt || '0'} <span className="text-sm">SQFT</span></p>
-              <p className="text-xs font-bold text-slate-500 mt-1">Total area processed across {invoice.qty || '1'} units.</p>
-            </div>
-            <div className="border-l-[4px] border-black pl-6 opacity-80">
-              <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Industrial Standards</h4>
-              <p className="text-xs font-bold leading-relaxed">Calculated using dynamic section formulas for Top, Bottom, and Side frame profiles as configured in the master system.</p>
             </div>
           </div>
         </div>
 
-        <div className="mb-12">
-          <div className="w-full border-[2px] border-black">
-            <div className="bg-black text-white p-3 flex justify-between font-black text-xs uppercase tracking-widest">
-              <span>Description</span>
-              <span>Amount (PKR)</span>
-            </div>
-            <div className="p-4 flex justify-between items-center border-b border-black/10">
-              <div className="space-y-1">
-                <p className="font-black text-sm uppercase">Custom Window Fabrication</p>
-                <p className="text-[10px] font-medium text-slate-500">Aluminum Profiles + Glass + Hardware + Labor</p>
-              </div>
-              <p className="font-black text-lg">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
+        <div className="mb-12"><div className="w-full border-[2px] border-black"><div className="bg-black text-white p-3 flex justify-between font-black text-xs uppercase tracking-widest"><span>Description</span><span>Amount (PKR)</span></div><div className="p-4 flex justify-between items-center border-b border-black/10"><div className="space-y-1"><p className="font-black text-sm uppercase">Custom Window Fabrication</p><p className="text-[10px] font-medium text-slate-500">Profiles + Glass + Hardware + Labor</p></div><p className="font-black text-lg">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p></div></div></div>
 
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 pt-8 border-t-[3px] border-black">
-          <div className="max-w-xs">
-            <h5 className="text-[10px] font-black uppercase mb-3">Notice:</h5>
-            <p className="text-[9px] leading-relaxed font-medium text-slate-500 italic">
-              * This is a computer-generated invoice based on industrial aluminum calculation algorithms. Please verify dimensions before installation. Awan Aluminum is not responsible for errors in provided measurements.
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Net Total Amount</p>
-            <h2 className="text-6xl font-black tracking-tighter leading-none">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2>
-            <div className="mt-4 flex items-center justify-end gap-2 text-green-600">
-              <div className="h-2 w-2 rounded-full bg-green-600" />
-              <p className="text-[10px] font-black uppercase">Payment Received / Full Settlement</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-24 grid grid-cols-2 gap-20">
-          <div className="text-center">
-            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px]">Customer Acknowledgement</div>
-          </div>
-          <div className="text-center">
-            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px]">Authorized Signature</div>
-          </div>
+          <div className="max-w-xs"><p className="text-[9px] leading-relaxed font-medium text-slate-500 italic">* Computer-generated invoice based on industrial algorithms. Verify dimensions before installation.</p></div>
+          <div className="text-right"><p className="text-[10px] font-black uppercase text-slate-400 mb-1">Net Total Amount</p><h2 className="text-6xl font-black tracking-tighter leading-none">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2></div>
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          body {
-            background: white !important;
-            padding: 0 !important;
-          }
-          .print-hidden {
-            display: none !important;
-          }
-          @page {
-            margin: 15mm;
-          }
-        }
-      ` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@media print { body { background: white !important; padding: 0 !important; } .print-hidden { display: none !important; } @page { margin: 15mm; } }` }} />
     </div>
   );
 }
