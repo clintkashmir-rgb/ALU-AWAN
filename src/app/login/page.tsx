@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Package, Lock, Mail, UserPlus, LogIn, UserCircle } from "lucide-react"
+import { Package, Lock, Mail, UserPlus, LogIn, UserCircle, ShieldCheck } from "lucide-react"
 import { useAuth, initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn, useUser } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
 
@@ -21,6 +21,9 @@ export default function LoginPage() {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+
+  // Security Key Registration
+  const SECURITY_SITE_KEY = "6Lf_KHwsAAAAAO6RzfIkQrIjuuDBtuvEmjlKJloM";
 
   React.useEffect(() => {
     if (user && !isUserLoading) {
@@ -112,6 +115,12 @@ export default function LoginPage() {
                     required
                   />
                 </div>
+              </div>
+              
+              <div className="pt-2 flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-bold uppercase">
+                <ShieldCheck className="h-3 w-3 text-accent" />
+                <span>Security Protected</span>
+                <input type="hidden" name="security-key" value={SECURITY_SITE_KEY} />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
