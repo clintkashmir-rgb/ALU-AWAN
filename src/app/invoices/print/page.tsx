@@ -20,7 +20,7 @@ function PrintContent() {
 
   if (!id) return <div className="p-20 text-center text-destructive font-bold uppercase">ERROR: NO INVOICE ID PROVIDED.</div>;
   if (isLoading) return <div className="p-20 text-center font-black animate-pulse text-2xl uppercase tracking-widest">GENERATING INDUSTRIAL PRINT VIEW...</div>;
-  if (!invoice) return <div className="p-20 text-center text-destructive font-bold uppercase">INVOICE DATA NOT FOUND. PLEASE CHECK ID.</div>;
+  if (!invoice) return <div className="p-20 text-center text-destructive font-bold uppercase">INVOICE DATA NOT FOUND.</div>;
 
   return (
     <div className="min-h-screen bg-white text-black p-4 md:p-10 font-sans selection:bg-accent/30">
@@ -63,26 +63,26 @@ function PrintContent() {
           <div>
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-2 border-b border-slate-200 pb-1">Billed To</h3>
             <p className="text-2xl font-black uppercase text-black">{invoice.customerName || "Walk-in Customer"}</p>
-            <p className="text-sm font-medium mt-1 text-slate-600">Reference: {invoice.invoiceNumber || `INV-${id.slice(-4).toUpperCase()}`}</p>
+            <p className="text-sm font-medium mt-1 text-slate-600">Reference: {invoice.invoiceNumber}</p>
           </div>
           <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3">Specification Breakdown</h3>
             <div className="grid grid-cols-2 gap-y-3">
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Configuration</p>
-                <p className="text-xs font-black text-black">{invoice.type || '---'} • {invoice.palla || '2'} Palla</p>
+                <p className="text-xs font-black text-black">{invoice.type} • {invoice.palla} Palla</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Quantity</p>
-                <p className="text-xs font-black text-black">{invoice.qty || '1'} Units</p>
+                <p className="text-xs font-black text-black">{invoice.qty} Units</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Width</p>
-                <p className="text-xs font-black text-black">{invoice.width || '0'} ft</p>
+                <p className="text-xs font-black text-black">{invoice.width} ft</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Height</p>
-                <p className="text-xs font-black text-black">{invoice.height || '0'} ft</p>
+                <p className="text-xs font-black text-black">{invoice.height} ft</p>
               </div>
             </div>
           </div>
@@ -90,17 +90,16 @@ function PrintContent() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-white border-2 border-black p-6 flex flex-col items-center justify-center rounded-sm">
-            <WindowDrawing width={Number(invoice.width) || 4} height={Number(invoice.height) || 4} type={invoice.type || 'Sliding'} className="scale-110" />
+            <WindowDrawing width={Number(invoice.width)} height={Number(invoice.height)} type={invoice.type} className="scale-110" />
           </div>
           <div className="flex flex-col justify-center space-y-6">
             <div className="border-l-[4px] border-black pl-6">
-              <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Glass Calculation</h4>
-              <p className="text-3xl font-black leading-none text-black">{invoice.glassSqFt || '0'} <span className="text-sm">SQFT</span></p>
-              <p className="text-xs font-bold text-slate-500 mt-1">Total area processed across {invoice.qty || '1'} units.</p>
+              <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Glass Area</h4>
+              <p className="text-3xl font-black leading-none text-black">{invoice.glassSqFt} <span className="text-sm">SQFT</span></p>
             </div>
             <div className="border-l-[4px] border-black pl-6 opacity-80">
-              <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Industrial Standards</h4>
-              <p className="text-xs font-bold leading-relaxed text-black">Calculated using dynamic section formulas for Top, Bottom, and Side frame profiles as configured in the master system.</p>
+              <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Calculated Logic</h4>
+              <p className="text-xs font-bold leading-relaxed text-black">Precision calculated using Formula Builder standards for Top, Bottom, and Side profiles.</p>
             </div>
           </div>
         </div>
@@ -116,7 +115,7 @@ function PrintContent() {
                 <p className="font-black text-sm uppercase text-black">Custom Window Fabrication</p>
                 <p className="text-[10px] font-medium text-slate-500">Aluminum Profiles + Glass + Hardware + Labor</p>
               </div>
-              <p className="font-black text-lg text-black">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p>
+              <p className="font-black text-lg text-black">PKR {Number(invoice.netAmount).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -125,42 +124,21 @@ function PrintContent() {
           <div className="max-w-xs">
             <h5 className="text-[10px] font-black uppercase mb-3 text-black">Notice:</h5>
             <p className="text-[9px] leading-relaxed font-medium text-slate-500 italic">
-              * This is a computer-generated invoice based on industrial aluminum calculation algorithms. Please verify dimensions before installation. Awan Aluminum is not responsible for errors in provided measurements.
+              * Computer-generated invoice. Please verify dimensions before installation.
             </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Net Total Amount</p>
-            <h2 className="text-6xl font-black tracking-tighter leading-none text-black">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2>
-            <div className="mt-4 flex items-center justify-end gap-2 text-green-600">
-              <div className="h-2 w-2 rounded-full bg-green-600" />
-              <p className="text-[10px] font-black uppercase">Payment Received / Full Settlement</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-24 grid grid-cols-2 gap-20">
-          <div className="text-center">
-            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px] text-black">Customer Acknowledgement</div>
-          </div>
-          <div className="text-center">
-            <div className="border-t-2 border-black pt-2 uppercase font-black text-[10px] text-black">Authorized Signature</div>
+            <h2 className="text-6xl font-black tracking-tighter leading-none text-black">PKR {Number(invoice.netAmount).toLocaleString()}</h2>
           </div>
         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
-          body {
-            background: white !important;
-            padding: 0 !important;
-            color: black !important;
-          }
-          .print-hidden {
-            display: none !important;
-          }
-          @page {
-            margin: 15mm;
-          }
+          body { background: white !important; padding: 0 !important; color: black !important; }
+          .print-hidden { display: none !important; }
+          @page { margin: 15mm; }
         }
       ` }} />
     </div>
