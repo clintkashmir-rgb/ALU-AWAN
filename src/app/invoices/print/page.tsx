@@ -9,6 +9,10 @@ import { WindowDrawing } from '@/components/WindowDrawing';
 import { Printer, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+/**
+ * PrintContent handles the actual logic of fetching and displaying the invoice.
+ * Wrapped in Suspense to prevent Internal Server Errors during static export.
+ */
 function PrintContent() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
@@ -40,7 +44,7 @@ function PrintContent() {
 
         <div className="flex flex-col md:flex-row justify-between items-start border-b-[4px] border-black pb-8 mb-8 gap-6">
           <div>
-            <h1 className="text-6xl font-black uppercase tracking-tighter leading-none mb-2">AWAN ALUMINUM</h1>
+            <h1 className="text-6xl font-black uppercase tracking-tighter leading-none mb-2 text-black">AWAN ALUMINUM</h1>
             <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">Industrial Fabrication & Management</p>
             <div className="mt-6 space-y-1 text-xs font-bold text-black">
               <p>Main Industrial Area, Sector 4-B, Karachi</p>

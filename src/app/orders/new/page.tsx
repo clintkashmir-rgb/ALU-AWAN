@@ -45,6 +45,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
+  // Strict filtering: Only sections with configured formulas
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -86,6 +87,7 @@ export default function NewOrderPage() {
       const top = evaluateFormula(s.top_formula, w, h)
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
+      // Standard calculation for frames
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       return { 
@@ -152,7 +154,7 @@ export default function NewOrderPage() {
       router.push("/invoices")
     } catch (error) {
       console.error("Transaction failed: ", error);
-      toast({ variant: "destructive", title: "Save Failed", description: "Could not generate sequential ID." });
+      toast({ variant: "destructive", title: "Save Failed", description: "Sequential ID sync failed." });
     }
   }
 

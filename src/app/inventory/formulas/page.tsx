@@ -157,19 +157,32 @@ export default function FormulasPage() {
             </CardFooter>
           </Card>
 
+          {/* Active Profiles List at the Bottom */}
           <Card className="border-none shadow-lg overflow-hidden mt-12">
-            <CardHeader className="bg-muted/30 border-b"><CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles</CardTitle></CardHeader>
+            <CardHeader className="bg-muted/30 border-b">
+              <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[300px]">
                 <div className="p-6">
                   {configuredSections.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-40"><AlertTriangle className="h-12 w-12 mb-4 text-destructive" /><p className="text-sm font-bold uppercase">No active formulas found.</p></div>
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-40">
+                      <AlertTriangle className="h-12 w-12 mb-4 text-destructive" />
+                      <p className="text-sm font-bold uppercase">No active formulas found.</p>
+                    </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {configuredSections.map(s => (
                         <div key={s.id} className="p-4 bg-muted/20 rounded-xl border border-border/50 flex items-center justify-between">
-                          <div className="flex items-center gap-3"><div className="h-2 w-2 rounded-full bg-green-500" /><span className="font-black text-accent text-sm">{s.name}</span></div>
-                          <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDeleteFormula(s.id)}><Trash2 className="h-4 w-4" /></Button>
+                          <div className="flex items-center gap-3">
+                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                            <span className="font-black text-accent text-sm">{s.name}</span>
+                          </div>
+                          <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteFormula(s.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       ))}
                     </div>
