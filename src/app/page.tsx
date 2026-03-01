@@ -1,3 +1,4 @@
+
 "use client"
 
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -6,25 +7,38 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileText, TrendingUp, Layers, LayoutDashboard, Calculator } from "lucide-react";
 import Link from "next/link";
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import React from "react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
   const firestore = useFirestore();
   
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isUserLoading, router]);
+
   const invoicesQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return query(collection(firestore, "invoices"), orderBy("timestamp", "desc"));
-  }, [firestore]);
+  }, [firestore, user]);
 
   const sectionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, "sections");
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: invoices, isLoading: loadingInvoices } = useCollection<any>(invoicesQuery);
   const { data: sections } = useCollection<any>(sectionsQuery);
+
+  if (isUserLoading || !user) {
+    return <div className="min-h-screen flex items-center justify-center font-black animate-pulse">CONNECTING...</div>;
+  }
 
   const totalRevenue = invoices?.reduce((sum, o) => sum + (o.netAmount || 0), 0) || 0;
   const totalInvoices = invoices?.length || 0;

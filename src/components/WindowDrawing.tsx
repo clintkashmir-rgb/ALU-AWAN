@@ -10,15 +10,20 @@ interface WindowDrawingProps {
 }
 
 export function WindowDrawing({ width, height, type, className }: WindowDrawingProps) {
-  // We use a viewBox that keeps the aspect ratio but scales well
   // Base dimensions for SVG
   const padding = 40
-  const svgWidth = 200
-  const svgHeight = (height / width) * svgWidth
+  const baseWidth = 200
+  
+  // Robustness check for invalid dimensions
+  const safeWidth = Math.max(width || 1, 0.1)
+  const safeHeight = Math.max(height || 1, 0.1)
+  
+  const svgWidth = baseWidth
+  const svgHeight = (safeHeight / safeWidth) * svgWidth
   
   // Constrain height if it's too tall for a single card
   const finalSvgHeight = Math.min(Math.max(svgHeight, 150), 300)
-  const finalSvgWidth = (width / height) * finalSvgHeight
+  const finalSvgWidth = (safeWidth / safeHeight) * finalSvgHeight
 
   const strokeWidth = 2
   const innerOffset = 8
@@ -34,7 +39,7 @@ export function WindowDrawing({ width, height, type, className }: WindowDrawingP
         {/* Dimension Lines - Width */}
         <line x1={padding} y1={padding - 10} x2={padding + finalSvgWidth} y2={padding - 10} stroke="#666" strokeWidth="1" strokeDasharray="2,2" />
         <text x={padding + finalSvgWidth / 2} y={padding - 15} textAnchor="middle" fontSize="10" fill="#333" fontWeight="bold">
-          {width} ft
+          {width || 0} ft
         </text>
 
         {/* Dimension Lines - Height */}
@@ -48,7 +53,7 @@ export function WindowDrawing({ width, height, type, className }: WindowDrawingP
           fontWeight="bold"
           transform={`rotate(90, ${padding + finalSvgWidth + 25}, ${padding + finalSvgHeight / 2})`}
         >
-          {height} ft
+          {height || 0} ft
         </text>
 
         {/* Outer Frame */}
@@ -79,7 +84,7 @@ export function WindowDrawing({ width, height, type, className }: WindowDrawingP
           strokeWidth={1}
         />
 
-        {/* Mid-rail for taller windows (sliding/door feel) */}
+        {/* Mid-rail for sliding windows */}
         {type === 'Sliding' && (
            <line 
             x1={padding + finalSvgWidth / 2} 

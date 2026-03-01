@@ -14,16 +14,23 @@ import { Calculator, Save, CheckCircle, Ruler, AlertTriangle } from "lucide-reac
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { collection, serverTimestamp } from "firebase/firestore"
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase"
+import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase"
 import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 import { useRouter } from "next/navigation"
 import { WindowDrawing } from "@/components/WindowDrawing"
 
 export default function NewOrderPage() {
+  const { user, isUserLoading } = useUser()
   const { toast } = useToast()
   const firestore = useFirestore()
   const router = useRouter()
   
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, isUserLoading, router])
+
   const [customerName, setCustomerName] = React.useState("")
   const [width, setWidth] = React.useState("4")
   const [height, setHeight] = React.useState("4")
@@ -35,13 +42,12 @@ export default function NewOrderPage() {
   const [showResults, setShowResults] = React.useState(false)
 
   const sectionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, "sections");
-  }, [firestore]);
+  }, [firestore, user]);
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
-  // Strict Filter: Only sections with formulas
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -92,7 +98,6 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
-      // Industrial Logic: (Top + Bottom + 2*Side) * Quantity
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -154,6 +159,8 @@ export default function NewOrderPage() {
     toast({ title: "Order Saved", description: "Syncing to Dashboard..." });
     router.push("/");
   }
+
+  if (isUserLoading || !user) return null
 
   return (
     <SidebarProvider>

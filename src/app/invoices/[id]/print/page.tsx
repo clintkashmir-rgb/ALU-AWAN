@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { WindowDrawing } from '@/components/WindowDrawing';
-import { Printer, ArrowLeft, Download } from 'lucide-react';
+import { Printer, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function PrintInvoicePage() {
@@ -156,21 +155,22 @@ export default function PrintInvoicePage() {
         </div>
       </div>
 
-      {/* Print Page Styles */}
-      <style jsx global>{`
-        @media print {
-          body {
-            background: white !important;
-            padding: 0 !important;
+      <style>
+        {`
+          @media print {
+            body {
+              background: white !important;
+              padding: 0 !important;
+            }
+            .print-hidden {
+              display: none !important;
+            }
+            @page {
+              margin: 15mm;
+            }
           }
-          .print-hidden {
-            display: none !important;
-          }
-          @page {
-            margin: 15mm;
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 }

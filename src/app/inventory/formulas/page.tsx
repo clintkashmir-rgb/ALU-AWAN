@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -14,19 +13,78 @@ import { Calculator, Save, RefreshCcw, LayoutGrid, AlertTriangle, Trash2 } from 
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase"
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase"
 import { collection, doc } from "firebase/firestore"
 import { updateDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 import { Section } from "@/lib/types"
+import { useRouter } from "next/navigation"
+
+const FormulaRow = ({ label, state, setState }: any) => {
+  const isExcluded = state.variable === "None"
+  
+  return (
+    <div className={`space-y-3 p-4 border rounded-lg transition-all ${isExcluded ? 'bg-muted/30 opacity-50 grayscale' : 'bg-card shadow-sm'}`}>
+      <div className="flex justify-between items-center">
+        <Label className="text-[10px] font-bold uppercase text-muted-foreground">{label}</Label>
+        {isExcluded && <Badge variant="outline" className="text-[8px] bg-background">Excluded</Badge>}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={state.variable} onValueChange={(v) => setState({ ...state, variable: v })}>
+          <SelectTrigger className="w-[110px] h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Width">Width</SelectItem>
+            <SelectItem value="Height">Height</SelectItem>
+            <SelectItem value="None">None</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={state.operator} onValueChange={(v) => setState({ ...state, operator: v })}>
+          <SelectTrigger className="w-[70px] h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="+">+</SelectItem>
+            <SelectItem value="-">-</SelectItem>
+            <SelectItem value="*">×</SelectItem>
+            <SelectItem value="/">÷</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Input 
+          type="number" 
+          step="any"
+          className="w-[90px] h-9" 
+          value={state.constant} 
+          onChange={(e) => setState({ ...state, constant: e.target.value })} 
+          placeholder="0"
+        />
+
+        <div className="ml-auto px-3 py-1.5 bg-accent/5 border border-accent/10 rounded font-mono text-xs text-accent">
+          {state.variable === 'None' ? '---' : 'ACTIVE'}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function FormulasPage() {
+  const { user, isUserLoading } = useUser()
+  const router = useRouter()
   const { toast } = useToast()
   const firestore = useFirestore()
   
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, isUserLoading, router])
+
   const sectionsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
+    if (!firestore || !user) return null;
     return collection(firestore, "sections");
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: sections, isLoading: loading } = useCollection<Section>(sectionsQuery);
   const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null)
@@ -92,61 +150,13 @@ export default function FormulasPage() {
     toast({ title: "Logic Reset", description: "Profile has been reset to default." });
   }
 
-  const FormulaRow = ({ label, state, setState }: any) => {
-    const isExcluded = state.variable === "None"
-    
-    return (
-      <div className={`space-y-3 p-4 border rounded-lg transition-all ${isExcluded ? 'bg-muted/30 opacity-50 grayscale' : 'bg-card shadow-sm'}`}>
-        <div className="flex justify-between items-center">
-          <Label className="text-[10px] font-bold uppercase text-muted-foreground">{label}</Label>
-          {isExcluded && <Badge variant="outline" className="text-[8px] bg-background">Excluded</Badge>}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Select value={state.variable} onValueChange={(v) => setState({ ...state, variable: v })}>
-            <SelectTrigger className="w-[110px] h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Width">Width</SelectItem>
-              <SelectItem value="Height">Height</SelectItem>
-              <SelectItem value="None">None</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={state.operator} onValueChange={(v) => setState({ ...state, operator: v })}>
-            <SelectTrigger className="w-[70px] h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="+">+</SelectItem>
-              <SelectItem value="-">-</SelectItem>
-              <SelectItem value="*">×</SelectItem>
-              <SelectItem value="/">÷</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Input 
-            type="number" 
-            step="any"
-            className="w-[90px] h-9" 
-            value={state.constant} 
-            onChange={(e) => setState({ ...state, constant: e.target.value })} 
-            placeholder="0"
-          />
-
-          <div className="ml-auto px-3 py-1.5 bg-accent/5 border border-accent/10 rounded font-mono text-xs text-accent">
-            {state.variable === 'None' ? '---' : 'ACTIVE'}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   const configuredSections = sections?.filter(s => 
     (s.top_formula && s.top_formula !== 'None') || 
     (s.bottom_formula && s.bottom_formula !== 'None') || 
     (s.side_formula && s.side_formula !== 'None')
   ) || []
+
+  if (isUserLoading || !user) return null
 
   return (
     <SidebarProvider>
@@ -210,7 +220,6 @@ export default function FormulasPage() {
             </CardFooter>
           </Card>
 
-          {/* Active Profiles Card Moved to Bottom */}
           <Card className="border-none shadow-lg bg-card overflow-hidden">
             <CardHeader className="bg-muted/30 border-b">
               <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
