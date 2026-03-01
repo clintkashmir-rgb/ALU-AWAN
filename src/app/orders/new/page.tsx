@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -48,6 +47,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
+  // Strict filtering: Only sections with configured formulas
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -69,7 +69,8 @@ export default function NewOrderPage() {
       const parts = formula.split(/\s+/)
       if (parts.length < 3) return 0
       const varVal = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0
-      const op = parts[1]; const val = parseFloat(parts[2]) || 0
+      const op = parts[1]; 
+      const val = parseFloat(parts[2]) || 0
       if (op === '+') return varVal + val
       if (op === '-') return varVal - val
       if (op === '*') return varVal * val
@@ -88,9 +89,16 @@ export default function NewOrderPage() {
       const top = evaluateFormula(s.top_formula, w, h)
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
+      // Standard industrial feet calculation
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
-      return { id: s.id, name: s.name, totalFt: parseFloat(totalFt.toFixed(2)), rate, amount: Math.round(totalFt * rate) }
+      return { 
+        id: s.id, 
+        name: s.name, 
+        totalFt: parseFloat(totalFt.toFixed(2)), 
+        rate, 
+        amount: Math.round(totalFt * rate) 
+      }
     })
   }, [width, height, qty, configuredSections, showResults])
 
@@ -98,21 +106,39 @@ export default function NewOrderPage() {
   const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
-    if (!width || !height || !qty) { toast({ variant: "destructive", title: "Missing Inputs" }); return; }
-    if (configuredSections.length === 0) { toast({ variant: "destructive", title: "No Formulas Found" }); return; }
+    if (!width || !height || !qty) {
+      toast({ variant: "destructive", title: "Missing Inputs", description: "Please enter width, height and quantity." })
+      return
+    }
+    if (configuredSections.length === 0) {
+      toast({ variant: "destructive", title: "No Formulas Found", description: "Please set logic in Formula Builder first." })
+      return
+    }
     setShowResults(true)
   }
 
   const handleSaveOrder = () => {
-    if (!customerName || !firestore) { toast({ variant: "destructive", title: "Customer Name Required" }); return; }
+    if (!customerName || !firestore) {
+      toast({ variant: "destructive", title: "Customer Name Required" })
+      return
+    }
+
     addDocumentNonBlocking(collection(firestore, "invoices"), {
-      customerName, date: new Date().toLocaleDateString(),
-      width: parseFloat(width), height: parseFloat(height),
-      palla: parseInt(palla), qty: parseInt(qty), type: windowType,
-      glassSqFt, netAmount: grandTotal, status: "Paid", timestamp: serverTimestamp()
+      customerName,
+      date: new Date().toLocaleDateString(),
+      width: parseFloat(width),
+      height: parseFloat(height),
+      palla: parseInt(palla),
+      qty: parseInt(qty),
+      type: windowType,
+      glassSqFt,
+      netAmount: grandTotal,
+      status: "Paid",
+      timestamp: serverTimestamp()
     });
-    toast({ title: "Order Saved" });
-    router.push("/");
+
+    toast({ title: "Order Saved", description: `Transaction for ${customerName} recorded.` })
+    router.push("/")
   }
 
   if (isUserLoading || !user) return null
@@ -132,33 +158,66 @@ export default function NewOrderPage() {
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Customer Name</Label>
-                  <Input placeholder="Enter Name..." className="h-11" value={customerName} onChange={e => setCustomerName(e.target.value)} />
+                  <Input 
+                    placeholder="Enter Name..." 
+                    className="h-11" 
+                    value={customerName} 
+                    onChange={e => setCustomerName(e.target.value)} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Type</Label>
                   <Select value={windowType} onValueChange={(v: any) => { setWindowType(v); setShowResults(false); }}>
-                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="Sliding">Sliding</SelectItem><SelectItem value="Fixed">Fixed</SelectItem></SelectContent>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Sliding">Sliding</SelectItem>
+                      <SelectItem value="Fixed">Fixed</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Width (ft)</Label>
-                  <Input type="number" step="any" className="h-11 text-center font-bold" value={width} onChange={e => { setWidth(e.target.value); setShowResults(false); }} />
+                  <Input 
+                    type="number" 
+                    step="any" 
+                    className="h-11 text-center font-bold" 
+                    value={width} 
+                    onChange={e => { setWidth(e.target.value); setShowResults(false); }} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Height (ft)</Label>
-                  <Input type="number" step="any" className="h-11 text-center font-bold" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
+                  <Input 
+                    type="number" 
+                    step="any" 
+                    className="h-11 text-center font-bold" 
+                    value={height} 
+                    onChange={e => { setHeight(e.target.value); setShowResults(false); }} 
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Palla</Label>
                   <Select value={palla} onValueChange={(v) => { setPalla(v); setShowResults(false); }}>
-                    <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="2">2 Palla</SelectItem><SelectItem value="3">3 Palla</SelectItem><SelectItem value="4">4 Palla</SelectItem></SelectContent>
+                    <SelectTrigger className="h-11">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 Palla</SelectItem>
+                      <SelectItem value="3">3 Palla</SelectItem>
+                      <SelectItem value="4">4 Palla</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Qty</Label>
-                  <Input type="number" className="h-11 text-center font-bold" value={qty} onChange={e => { setQty(e.target.value); setShowResults(false); }} />
+                  <Input 
+                    type="number" 
+                    className="h-11 text-center font-bold" 
+                    value={qty} 
+                    onChange={e => { setQty(e.target.value); setShowResults(false); }} 
+                  />
                 </div>
               </div>
 
@@ -169,7 +228,11 @@ export default function NewOrderPage() {
                 </div>
               )}
 
-              <Button onClick={handleCalculate} className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2" disabled={configuredSections.length === 0}>
+              <Button 
+                onClick={handleCalculate} 
+                className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2"
+                disabled={configuredSections.length === 0}
+              >
                 <CheckCircle className="h-5 w-5" /> OK - CALCULATE
               </Button>
             </CardContent>
@@ -190,7 +253,12 @@ export default function NewOrderPage() {
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Rate (/Sqft)</Label>
-                        <Input type="number" className="h-10 text-lg font-black" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
+                        <Input 
+                          type="number" 
+                          className="h-10 text-lg font-black" 
+                          value={glassRate} 
+                          onChange={e => setGlassRate(e.target.value)} 
+                        />
                       </div>
                       <div className="text-right space-y-1">
                         <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Total</Label>
@@ -204,7 +272,14 @@ export default function NewOrderPage() {
               <Card className="border-none shadow-xl overflow-hidden">
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader><TableRow className="bg-muted/50"><TableHead>Profile</TableHead><TableHead className="text-right">Total Ft</TableHead><TableHead className="text-right">Rate</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead>Profile</TableHead>
+                        <TableHead className="text-right">Total Ft</TableHead>
+                        <TableHead className="text-right">Rate</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
                     <TableBody>
                       {comparisonData.map(s => (
                         <TableRow key={s.id} className="hover:bg-muted/10">
@@ -222,10 +297,21 @@ export default function NewOrderPage() {
               <div className="flex flex-col md:flex-row items-end justify-between bg-card p-6 rounded-2xl shadow-2xl border gap-6">
                 <div className="w-full md:w-40 space-y-2">
                   <Label className="text-[8px] uppercase font-black tracking-widest">Discount (%)</Label>
-                  <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} className="h-10 text-lg font-bold" />
+                  <Input 
+                    type="number" 
+                    value={discountPercent} 
+                    onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} 
+                    className="h-10 text-lg font-bold" 
+                  />
                 </div>
-                <div className="text-right flex-1"><p className="text-[8px] uppercase font-black text-muted-foreground">Grand Total</p><p className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</p></div>
-                <Button onClick={handleSaveOrder} className="h-14 px-10 bg-primary text-primary-foreground text-lg font-black rounded-xl shadow-xl gap-2">
+                <div className="text-right flex-1">
+                  <p className="text-[8px] uppercase font-black text-muted-foreground">Grand Total</p>
+                  <p className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</p>
+                </div>
+                <Button 
+                  onClick={handleSaveOrder} 
+                  className="h-14 px-10 bg-primary text-primary-foreground text-lg font-black rounded-xl shadow-xl gap-2"
+                >
                   <Save className="h-5 w-5" /> SAVE ORDER
                 </Button>
               </div>
