@@ -25,9 +25,7 @@ export default function NewOrderPage() {
   const router = useRouter()
   
   React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push("/login")
-    }
+    if (!isUserLoading && !user) router.push("/login")
   }, [user, isUserLoading, router])
 
   const [customerName, setCustomerName] = React.useState("")

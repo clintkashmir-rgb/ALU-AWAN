@@ -33,11 +33,15 @@ export default function PrintInvoicePage() {
 
       <div className="max-w-4xl mx-auto border-[3px] border-black p-8 md:p-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-black text-white flex items-center justify-center -rotate-45 translate-x-12 -translate-y-12 font-black text-xs">ORIGINAL</div>
+        
         <div className="flex flex-col md:flex-row justify-between items-start border-b-[3px] border-black pb-8 mb-8 gap-6">
           <div>
             <h1 className="text-5xl font-black uppercase tracking-tighter leading-none mb-2">AWAN ALUMINUM</h1>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Industrial Fabrication & Management</p>
-            <div className="mt-6 space-y-1 text-xs font-medium"><p>Main Industrial Area, Sector 4-B</p><p>Contact: +92 3XX XXXXXXX</p></div>
+            <div className="mt-6 space-y-1 text-xs font-medium">
+              <p>Main Industrial Area, Sector 4-B</p>
+              <p>Contact: +92 3XX XXXXXXX</p>
+            </div>
           </div>
           <div className="md:text-right flex flex-col md:items-end">
             <div className="bg-black text-white px-4 py-2 mb-4 font-black uppercase text-xl inline-block">INVOICE</div>
@@ -76,11 +80,32 @@ export default function PrintInvoicePage() {
           </div>
         </div>
 
-        <div className="mb-12"><div className="w-full border-[2px] border-black"><div className="bg-black text-white p-3 flex justify-between font-black text-xs uppercase tracking-widest"><span>Description</span><span>Amount (PKR)</span></div><div className="p-4 flex justify-between items-center border-b border-black/10"><div className="space-y-1"><p className="font-black text-sm uppercase">Custom Window Fabrication</p><p className="text-[10px] font-medium text-slate-500">Profiles + Glass + Hardware + Labor</p></div><p className="font-black text-lg">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p></div></div></div>
+        <div className="mb-12">
+          <div className="w-full border-[2px] border-black">
+            <div className="bg-black text-white p-3 flex justify-between font-black text-xs uppercase tracking-widest">
+              <span>Description</span>
+              <span>Amount (PKR)</span>
+            </div>
+            <div className="p-4 flex justify-between items-center border-b border-black/10">
+              <div className="space-y-1">
+                <p className="font-black text-sm uppercase">Custom Window Fabrication</p>
+                <p className="text-[10px] font-medium text-slate-500">Profiles + Glass + Hardware + Labor</p>
+              </div>
+              <p className="font-black text-lg">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
 
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 pt-8 border-t-[3px] border-black">
-          <div className="max-w-xs"><p className="text-[9px] leading-relaxed font-medium text-slate-500 italic">* Computer-generated invoice based on industrial algorithms. Verify dimensions before installation.</p></div>
-          <div className="text-right"><p className="text-[10px] font-black uppercase text-slate-400 mb-1">Net Total Amount</p><h2 className="text-6xl font-black tracking-tighter leading-none">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2></div>
+          <div className="max-w-xs">
+            <p className="text-[9px] leading-relaxed font-medium text-slate-500 italic">
+              * Computer-generated invoice based on industrial aluminum calculation algorithms. Verify dimensions before installation.
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Net Total Amount</p>
+            <h2 className="text-6xl font-black tracking-tighter leading-none">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2>
+          </div>
         </div>
       </div>
       <style dangerouslySetInnerHTML={{ __html: `@media print { body { background: white !important; padding: 0 !important; } .print-hidden { display: none !important; } @page { margin: 15mm; } }` }} />
