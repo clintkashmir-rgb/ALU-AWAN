@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -35,6 +36,7 @@ export default function InvoicesPage() {
   }, [invoices, searchTerm]);
 
   const handlePrint = (id: string) => {
+    // Corrected to use search params to fix build error
     router.push(`/invoices/print?id=${id}`);
   }
 
@@ -44,7 +46,7 @@ export default function InvoicesPage() {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
           <SidebarTrigger />
-          <h1 className="font-headline text-xl font-bold flex items-center gap-2">
+          <h1 className="font-headline text-xl font-bold flex items-center gap-2 uppercase tracking-tight">
             <LayoutList className="h-5 w-5 text-accent" /> Invoice History
           </h1>
         </header>
@@ -54,56 +56,56 @@ export default function InvoicesPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by customer..." 
-                className="pl-10 h-11"
+                placeholder="Search history by customer..." 
+                className="pl-10 h-12 rounded-xl"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
 
-          <Card className="border-none shadow-lg overflow-hidden">
-            <CardHeader className="bg-muted/30">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <FileText className="h-4 w-4 text-accent" /> Completed Transactions
+          <Card className="border-none shadow-xl overflow-hidden bg-card">
+            <CardHeader className="bg-muted/30 py-4">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 text-muted-foreground">
+                <FileText className="h-4 w-4 text-accent" /> Compiled Transactions
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/10">
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Net Amount</TableHead>
-                    <TableHead>Status</TableHead>
+                  <TableRow className="bg-muted/10 border-b">
+                    <TableHead className="font-black text-[10px] uppercase">Customer</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase">Date</TableHead>
+                    <TableHead className="text-right font-black text-[10px] uppercase">Net Amount</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase">Status</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-12 opacity-50">Loading history...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-black animate-pulse opacity-50 uppercase tracking-widest">Fetching industrial history...</TableCell></TableRow>
                   ) : filteredInvoices.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-12 opacity-50">No orders found.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold opacity-30 uppercase">No orders found in the database.</TableCell></TableRow>
                   ) : filteredInvoices.map((inv) => (
-                    <TableRow key={inv.id} className="hover:bg-muted/5 transition-colors">
-                      <TableCell className="font-medium">{inv.customerName}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{inv.date}</TableCell>
-                      <TableCell className="text-right font-bold text-accent">PKR {inv.netAmount?.toLocaleString()}</TableCell>
+                    <TableRow key={inv.id} className="hover:bg-muted/5 transition-colors border-b">
+                      <TableCell className="font-black text-accent uppercase">{inv.customerName}</TableCell>
+                      <TableCell className="text-[10px] font-bold text-muted-foreground">{inv.date}</TableCell>
+                      <TableCell className="text-right font-black text-lg">PKR {inv.netAmount?.toLocaleString()}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
+                        <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20 font-black text-[10px] uppercase">
                           {inv.status || "Paid"}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-accent/10 rounded-full">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2" onClick={() => handlePrint(inv.id)}>
-                              <Printer className="h-4 w-4" /> Print Bill
+                          <DropdownMenuContent align="end" className="rounded-xl border-2">
+                            <DropdownMenuItem className="gap-2 font-bold cursor-pointer" onClick={() => handlePrint(inv.id)}>
+                              <Printer className="h-4 w-4 text-accent" /> Print Official Bill
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

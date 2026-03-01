@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -37,13 +38,13 @@ export default function LoginPage() {
     try {
       if (isSignUp) {
         initiateEmailSignUp(auth, email, password)
-        toast({ title: "Account Created", description: "Welcome to Awan Manager." })
+        toast({ title: "Account Created", description: "Welcome to Awan Industrial Manager." })
       } else {
         initiateEmailSignIn(auth, email, password)
-        toast({ title: "Welcome Back", description: "Successfully logged in." })
+        toast({ title: "Authorized Access", description: "Successfully logged into system." })
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Auth Error", description: error.message })
+      toast({ variant: "destructive", title: "Authentication Failed", description: error.message })
     } finally {
       setIsSubmitting(false)
     }
@@ -53,45 +54,45 @@ export default function LoginPage() {
     setIsSubmitting(true)
     try {
       initiateAnonymousSignIn(auth)
-      toast({ title: "Guest Access", description: "Entering as guest staff." })
+      toast({ title: "Guest Session Active", description: "Limited staff access granted." })
     } catch (error: any) {
-      toast({ variant: "destructive", title: "Error", description: error.message })
+      toast({ variant: "destructive", title: "Session Error", description: error.message })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (isUserLoading) return <div className="min-h-screen flex items-center justify-center font-black animate-pulse text-accent">AWAN MANAGER...</div>
+  if (isUserLoading) return <div className="min-h-screen flex items-center justify-center font-black animate-pulse text-accent text-2xl tracking-tighter uppercase">Initializing Awan Management System...</div>
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background selection:bg-accent/30">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="h-16 w-16 bg-accent text-accent-foreground rounded-2xl flex items-center justify-center shadow-2xl mb-4">
-            <Package className="h-10 w-10" />
+          <div className="h-20 w-20 bg-accent text-accent-foreground rounded-[2rem] flex items-center justify-center shadow-2xl mb-4 border-4 border-accent/20">
+            <Package className="h-12 w-12" />
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tighter">Awan Aluminum</h1>
-          <p className="text-muted-foreground font-bold text-xs tracking-widest uppercase">Industrial Precision Manager</p>
+          <h1 className="text-5xl font-black uppercase tracking-tighter leading-none">AWAN ALUMINUM</h1>
+          <p className="text-muted-foreground font-black text-[10px] tracking-[0.3em] uppercase">Industrial Precision Management</p>
         </div>
 
-        <Card className="border-none shadow-2xl bg-card">
-          <CardHeader>
-            <CardTitle className="text-xl font-black uppercase flex items-center gap-2">
+        <Card className="border-none shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] bg-card overflow-hidden">
+          <CardHeader className="border-b bg-muted/30">
+            <CardTitle className="text-xl font-black uppercase flex items-center gap-2 tracking-tight">
               {isSignUp ? <UserPlus className="h-5 w-5 text-accent" /> : <LogIn className="h-5 w-5 text-accent" />}
-              {isSignUp ? "Create Account" : "Staff Login"}
+              {isSignUp ? "Register Controller" : "System Authorization"}
             </CardTitle>
-            <CardDescription>Enter credentials to access dashboard.</CardDescription>
+            <CardDescription className="font-bold text-[10px] uppercase">Secure biometric-ready industrial login</CardDescription>
           </CardHeader>
           <form onSubmit={handleEmailAuth}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase">Email Address</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Officer Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     type="email" 
-                    placeholder="name@awan.com" 
-                    className="pl-10 h-12" 
+                    placeholder="name@awan-aluminum.com" 
+                    className="pl-10 h-14 font-bold border-2 focus:border-accent" 
                     value={email} 
                     onChange={e => setEmail(e.target.value)} 
                     required 
@@ -99,13 +100,13 @@ export default function LoginPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-bold uppercase">Password</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Access Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
                     type="password" 
                     placeholder="••••••••" 
-                    className="pl-10 h-12" 
+                    className="pl-10 h-14 font-bold border-2 focus:border-accent" 
                     value={password} 
                     onChange={e => setPassword(e.target.value)} 
                     required 
@@ -113,37 +114,37 @@ export default function LoginPage() {
                 </div>
               </div>
               
-              <div className="pt-2 flex items-center justify-center gap-2 text-[10px] text-muted-foreground font-bold uppercase">
+              <div className="pt-2 flex items-center justify-center gap-2 text-[9px] text-muted-foreground font-black uppercase bg-muted/50 py-2 rounded-lg border border-dashed">
                 <ShieldCheck className="h-3 w-3 text-accent" />
-                <span>Security Key: {SECURITY_SITE_KEY.slice(0, 10)}...</span>
+                <span>Security Token: {SECURITY_SITE_KEY.slice(0, 15)}...</span>
                 <input type="hidden" name="security-key" value={SECURITY_SITE_KEY} />
               </div>
             </CardContent>
-            <CardFooter className="flex flex-col gap-4">
+            <CardFooter className="flex flex-col gap-4 pb-8">
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-accent text-accent-foreground font-black uppercase tracking-widest hover:bg-accent/90" 
+                className="w-full h-14 bg-accent text-accent-foreground font-black uppercase tracking-[0.2em] hover:bg-accent/90 shadow-xl transition-all transform active:scale-[0.98] rounded-xl" 
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Processing..." : isSignUp ? "Sign Up Now" : "Login Securely"}
+                {isSubmitting ? "AUTHORIZING..." : isSignUp ? "INITIALIZE ACCOUNT" : "SECURE LOGIN"}
               </Button>
               <div className="grid grid-cols-2 gap-4 w-full">
                 <Button 
                   type="button" 
                   variant="outline" 
-                  className="gap-2 h-11 text-xs font-bold" 
+                  className="gap-2 h-12 text-[10px] font-black uppercase border-2" 
                   onClick={handleGuestLogin} 
                   disabled={isSubmitting}
                 >
-                  <UserCircle className="h-4 w-4" /> GUEST
+                  <UserCircle className="h-4 w-4" /> GUEST ACCESS
                 </Button>
                 <Button 
                   type="button" 
                   variant="ghost" 
-                  className="text-xs font-bold" 
+                  className="text-[10px] font-black uppercase" 
                   onClick={() => setIsSignUp(!isSignUp)}
                 >
-                  {isSignUp ? "ALREADY REGISTERED?" : "CREATE ACCOUNT"}
+                  {isSignUp ? "SYSTEM LOGIN" : "CREATE ACCOUNT"}
                 </Button>
               </div>
             </CardFooter>

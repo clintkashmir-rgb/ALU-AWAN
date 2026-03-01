@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -99,7 +100,8 @@ export default function NewOrderPage() {
   }, [width, height, qty, configuredSections, showResults])
 
   const glassAmount = Math.round(glassSqFt * (parseFloat(glassRate) || 0))
-  const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
+  const selectedProfileAmount = comparisonData[0]?.amount || 0
+  const grandTotal = Math.round((glassAmount + selectedProfileAmount) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
     if (!width || !height || !qty) {
@@ -133,7 +135,7 @@ export default function NewOrderPage() {
       timestamp: serverTimestamp()
     });
 
-    toast({ title: "Order Saved" })
+    toast({ title: "Order Saved Successfully" })
     router.push("/")
   }
 
@@ -145,16 +147,16 @@ export default function NewOrderPage() {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
           <SidebarTrigger />
-          <h1 className="ml-2 font-headline text-xl font-bold uppercase">New Order</h1>
+          <h1 className="ml-2 font-headline text-xl font-bold uppercase tracking-tight">New Order Processing</h1>
         </header>
 
         <main className="flex-1 p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
-          <Card className="border-none shadow-xl">
+          <Card className="border-none shadow-xl bg-card">
             <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Customer Name</Label>
-                  <Input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Name..." />
+                  <Input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Enter name..." />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Type</Label>
@@ -194,12 +196,12 @@ export default function NewOrderPage() {
               {configuredSections.length === 0 && (
                 <div className="p-4 bg-destructive/10 border border-dashed border-destructive/30 rounded-xl flex flex-col items-center justify-center gap-2 text-destructive">
                   <AlertTriangle className="h-6 w-6" />
-                  <p className="text-[10px] font-black uppercase">Set formulas in Formula Builder first.</p>
+                  <p className="text-[10px] font-black uppercase text-center">No logic configured. Set formulas in Formula Builder first to see prices.</p>
                 </div>
               )}
 
-              <Button onClick={handleCalculate} className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2" disabled={configuredSections.length === 0}>
-                <CheckCircle className="h-5 w-5" /> OK - CALCULATE
+              <Button onClick={handleCalculate} className="w-full h-14 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2 transition-all transform active:scale-[0.98]" disabled={configuredSections.length === 0}>
+                <CheckCircle className="h-5 w-5" /> OK - RUN CALCULATION
               </Button>
             </CardContent>
           </Card>
@@ -213,34 +215,35 @@ export default function NewOrderPage() {
                 <Card className="md:col-span-2 border-none shadow-lg bg-accent/5 border-2 border-dashed border-accent/20">
                   <CardContent className="pt-6 space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Area: {width}x{height}ft</span>
-                      <span className="text-xl font-black text-accent">{glassSqFt} Sqft</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Calculated Area: {width} x {height} ft</span>
+                      <span className="text-2xl font-black text-accent">{glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Rate (/Sqft)</Label>
-                        <Input type="number" className="font-black" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
+                        <Label className="text-[8px] uppercase font-black text-muted-foreground tracking-tighter">Glass Rate (PKR/Sqft)</Label>
+                        <Input type="number" className="font-black h-12 text-lg" value={glassRate} onChange={e => setGlassRate(e.target.value)} />
                       </div>
                       <div className="text-right space-y-1">
-                        <Label className="text-[8px] uppercase font-bold text-muted-foreground">Glass Total</Label>
-                        <div className="text-2xl font-black text-accent">PKR {glassAmount.toLocaleString()}</div>
+                        <Label className="text-[8px] uppercase font-black text-muted-foreground tracking-tighter">Glass Total Cost</Label>
+                        <div className="text-3xl font-black text-accent leading-none">PKR {glassAmount.toLocaleString()}</div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              <Card className="border-none shadow-xl overflow-hidden">
+              <Card className="border-none shadow-xl overflow-hidden bg-card">
+                <CardHeader className="bg-muted/30 py-3"><CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Price Comparison by Profile</CardTitle></CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader><TableRow className="bg-muted/50"><TableHead>Profile</TableHead><TableHead className="text-right">Total Ft</TableHead><TableHead className="text-right">Rate</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+                    <TableHeader><TableRow className="bg-muted/50 border-b"><TableHead className="font-black uppercase text-[10px]">Profile Name</TableHead><TableHead className="text-right font-black uppercase text-[10px]">Total Length</TableHead><TableHead className="text-right font-black uppercase text-[10px]">Unit Rate</TableHead><TableHead className="text-right font-black uppercase text-[10px]">Total Amount</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {comparisonData.map(s => (
-                        <TableRow key={s.id} className="hover:bg-muted/10">
-                          <TableCell className="font-black text-accent text-xs">{s.name}</TableCell>
-                          <TableCell className="text-right font-mono text-xs">{s.totalFt} ft</TableCell>
-                          <TableCell className="text-right text-[10px] opacity-70">PKR {s.rate}</TableCell>
-                          <TableCell className="text-right font-black text-lg">PKR {s.amount.toLocaleString()}</TableCell>
+                        <TableRow key={s.id} className="hover:bg-muted/10 border-b">
+                          <TableCell className="font-black text-accent">{s.name}</TableCell>
+                          <TableCell className="text-right font-mono font-bold">{s.totalFt} ft</TableCell>
+                          <TableCell className="text-right text-[10px] opacity-70">PKR {s.rate}/ft</TableCell>
+                          <TableCell className="text-right font-black text-xl">PKR {s.amount.toLocaleString()}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -248,17 +251,17 @@ export default function NewOrderPage() {
                 </CardContent>
               </Card>
 
-              <div className="flex flex-col md:flex-row items-end justify-between bg-card p-6 rounded-2xl shadow-2xl border gap-6">
-                <div className="w-full md:w-40 space-y-2">
-                  <Label className="text-[8px] uppercase font-black">Discount (%)</Label>
-                  <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} />
+              <div className="flex flex-col md:flex-row items-end justify-between bg-card p-8 rounded-2xl shadow-2xl border-2 border-accent/20 gap-6">
+                <div className="w-full md:w-48 space-y-2">
+                  <Label className="text-[8px] uppercase font-black tracking-widest text-muted-foreground">Special Discount (%)</Label>
+                  <Input type="number" className="h-12 text-xl font-black" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} />
                 </div>
                 <div className="text-right flex-1">
-                  <p className="text-[8px] uppercase font-black text-muted-foreground">Grand Total</p>
-                  <p className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</p>
+                  <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em] mb-1">Final Payable Grand Total</p>
+                  <p className="text-6xl font-black text-accent tracking-tighter leading-none">PKR {grandTotal.toLocaleString()}</p>
                 </div>
-                <Button onClick={handleSaveOrder} className="h-14 px-10 bg-primary text-primary-foreground text-lg font-black rounded-xl shadow-xl gap-2">
-                  <Save className="h-5 w-5" /> SAVE ORDER
+                <Button onClick={handleSaveOrder} className="h-16 px-12 bg-primary text-primary-foreground text-xl font-black rounded-xl shadow-xl gap-2 hover:bg-primary/90 transition-all uppercase">
+                  <Save className="h-6 w-6" /> SAVE ORDER & CLOSE
                 </Button>
               </div>
             </div>

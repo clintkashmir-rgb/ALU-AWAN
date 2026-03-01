@@ -1,7 +1,10 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
+  // Next.js standard export directory is 'out'. 
+  // Reserved directory 'public' cannot be used as distDir.
   typescript: {
     ignoreBuildErrors: true,
   },
