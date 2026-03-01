@@ -52,8 +52,8 @@ function PrintContent() {
             <div className="bg-black text-white px-4 py-2 mb-4 font-black uppercase text-xl inline-block">
               INVOICE
             </div>
-            <p className="text-xs font-black uppercase opacity-40 mb-1">Invoice ID</p>
-            <p className="font-mono font-bold text-lg mb-4 text-black">#{id.slice(0, 8).toUpperCase()}</p>
+            <p className="text-xs font-black uppercase opacity-40 mb-1">Invoice Number</p>
+            <p className="font-mono font-bold text-lg mb-4 text-black">{invoice.invoiceNumber || `#${id.slice(0, 8).toUpperCase()}`}</p>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Issue Date</p>
             <p className="font-bold text-black">{invoice.date || '---'}</p>
           </div>
@@ -63,7 +63,7 @@ function PrintContent() {
           <div>
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-2 border-b border-slate-200 pb-1">Billed To</h3>
             <p className="text-2xl font-black uppercase text-black">{invoice.customerName || "Walk-in Customer"}</p>
-            <p className="text-sm font-medium mt-1 text-slate-600">Client Reference: INV-{id.slice(-4).toUpperCase()}</p>
+            <p className="text-sm font-medium mt-1 text-slate-600">Reference: {invoice.invoiceNumber || `INV-${id.slice(-4).toUpperCase()}`}</p>
           </div>
           <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3">Specification Breakdown</h3>

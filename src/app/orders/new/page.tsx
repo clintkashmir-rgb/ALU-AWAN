@@ -4,7 +4,7 @@
 import * as React from "react"
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/layout/AppSidebar"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -121,7 +121,12 @@ export default function NewOrderPage() {
       return
     }
 
+    // Auto-generate ID
+    const timestampId = Date.now().toString().slice(-6);
+    const invoiceNumber = `AW-${new Date().getFullYear()}-${timestampId}`;
+
     addDocumentNonBlocking(collection(firestore, "invoices"), {
+      invoiceNumber,
       customerName,
       date: new Date().toLocaleDateString(),
       width: parseFloat(width),
@@ -135,7 +140,7 @@ export default function NewOrderPage() {
       timestamp: serverTimestamp()
     });
 
-    toast({ title: "Order Saved Successfully" })
+    toast({ title: "Order Saved", description: `Invoice ${invoiceNumber} synchronized.` })
     router.push("/")
   }
 

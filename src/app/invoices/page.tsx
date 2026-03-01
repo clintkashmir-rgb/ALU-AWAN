@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, FileText, Printer, MoreVertical, LayoutList } from "lucide-react"
+import { Search, FileText, Printer, MoreVertical, LayoutList, Hash } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useCollection, useMemoFirebase } from "@/firebase"
@@ -31,7 +31,8 @@ export default function InvoicesPage() {
   const filteredInvoices = React.useMemo(() => {
     if (!invoices) return [];
     return invoices.filter(o => 
-      o.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
+      o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      o.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [invoices, searchTerm]);
 
@@ -55,7 +56,7 @@ export default function InvoicesPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search history by customer..." 
+                placeholder="Search by customer or invoice #..." 
                 className="pl-10 h-12 rounded-xl"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -73,6 +74,7 @@ export default function InvoicesPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/10 border-b">
+                    <TableHead className="font-black text-[10px] uppercase">Invoice #</TableHead>
                     <TableHead className="font-black text-[10px] uppercase">Customer</TableHead>
                     <TableHead className="font-black text-[10px] uppercase">Date</TableHead>
                     <TableHead className="text-right font-black text-[10px] uppercase">Net Amount</TableHead>
@@ -82,11 +84,14 @@ export default function InvoicesPage() {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-black animate-pulse opacity-50 uppercase tracking-widest">Fetching industrial history...</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-20 font-black animate-pulse opacity-50 uppercase tracking-widest">Fetching industrial history...</TableCell></TableRow>
                   ) : filteredInvoices.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 font-bold opacity-30 uppercase">No orders found in the database.</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center py-20 font-bold opacity-30 uppercase">No orders found in the database.</TableCell></TableRow>
                   ) : filteredInvoices.map((inv) => (
                     <TableRow key={inv.id} className="hover:bg-muted/5 transition-colors border-b">
+                      <TableCell className="font-mono font-bold text-xs text-muted-foreground">
+                        {inv.invoiceNumber || `ID-${inv.id.slice(0, 4)}`}
+                      </TableCell>
                       <TableCell className="font-black text-accent uppercase">{inv.customerName}</TableCell>
                       <TableCell className="text-[10px] font-bold text-muted-foreground">{inv.date}</TableCell>
                       <TableCell className="text-right font-black text-lg">PKR {inv.netAmount?.toLocaleString()}</TableCell>
