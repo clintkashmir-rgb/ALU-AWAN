@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -47,8 +48,8 @@ const FormulaRow = ({ label, state, setState }: any) => {
           <SelectContent>
             <SelectItem value="+">+</SelectItem>
             <SelectItem value="-">-</SelectItem>
-            <SelectItem value="*">×</SelectItem>
-            <SelectItem value="/">÷</SelectItem>
+            <SelectItem value="*">x</SelectItem>
+            <SelectItem value="/">/</SelectItem>
           </SelectContent>
         </Select>
 
@@ -88,7 +89,6 @@ export default function FormulasPage() {
 
   const { data: sections, isLoading: loading } = useCollection<Section>(sectionsQuery);
   const [selectedSectionId, setSelectedSectionId] = React.useState<string | null>(null)
-  const [activeType, setActiveType] = React.useState<'Sliding' | 'Fixed'>('Sliding')
   
   const currentSection = sections?.find(s => s.id === selectedSectionId)
   
@@ -172,17 +172,9 @@ export default function FormulasPage() {
         <main className="flex-1 p-4 md:p-6 space-y-8 max-w-4xl mx-auto">
           <Card className="border-none shadow-xl overflow-hidden">
             <CardHeader className="pb-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">Logic Builder</CardTitle>
-                  <CardDescription>Configure rules for selected profiles.</CardDescription>
-                </div>
-                <Tabs value={activeType} onValueChange={(v: any) => setActiveType(v)}>
-                  <TabsList className="bg-muted/50">
-                    <TabsTrigger value="Sliding">Sliding</TabsTrigger>
-                    <TabsTrigger value="Fixed">Fixed</TabsTrigger>
-                  </TabsList>
-                </Tabs>
+              <div>
+                <CardTitle className="text-lg">Logic Builder</CardTitle>
+                <CardDescription>Configure rules for selected profiles.</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">

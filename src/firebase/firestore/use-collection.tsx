@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -96,7 +97,7 @@ export function useCollection<T = any>(
 
   // Log warning instead of throwing during SSR to prevent Internal Server Error
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo && typeof window !== 'undefined') {
-    console.error('Firebase Query was not properly memoized using useMemoFirebase. This can cause infinite loops.');
+    console.warn('Firebase Query was not properly memoized using useMemoFirebase. This can cause infinite loops.');
   }
 
   return { data, isLoading, error };

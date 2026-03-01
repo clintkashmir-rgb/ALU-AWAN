@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -15,8 +16,8 @@ export function WindowDrawing({ width, height, type, className }: WindowDrawingP
   const baseWidth = 200
   
   // Robustness check for invalid dimensions
-  const safeWidth = Math.max(width || 1, 0.1)
-  const safeHeight = Math.max(height || 1, 0.1)
+  const safeWidth = Number.isNaN(Number(width)) || width <= 0 ? 1 : width;
+  const safeHeight = Number.isNaN(Number(height)) || height <= 0 ? 1 : height;
   
   const svgWidth = baseWidth
   const svgHeight = (safeHeight / safeWidth) * svgWidth

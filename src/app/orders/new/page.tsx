@@ -98,6 +98,7 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
+      // Industrial logic: Top + Bottom + 2 Side pieces
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -111,6 +112,7 @@ export default function NewOrderPage() {
     })
   }, [width, height, qty, configuredSections, showResults])
 
+  // Use the first configured section as the primary amount for summary if multiple exist
   const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {

@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useDoc, useFirestore } from '@/firebase';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { WindowDrawing } from '@/components/WindowDrawing';
 import { Printer, ArrowLeft } from 'lucide-react';
@@ -12,7 +13,8 @@ export default function PrintInvoicePage() {
   const { id } = useParams();
   const router = useRouter();
   const firestore = useFirestore();
-  const docRef = React.useMemo(() => (id ? doc(firestore, 'invoices', id as string) : null), [firestore, id]);
+  
+  const docRef = useMemoFirebase(() => (id ? doc(firestore, 'invoices', id as string) : null), [firestore, id]);
   const { data: invoice, isLoading } = useDoc(docRef);
 
   if (isLoading) return <div className="p-20 text-center font-black animate-pulse">GENERATING PRINT VIEW...</div>;
@@ -55,9 +57,9 @@ export default function PrintInvoicePage() {
               INVOICE
             </div>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Invoice ID</p>
-            <p className="font-mono font-bold text-lg mb-4">#{id?.slice(0, 8).toUpperCase()}</p>
+            <p className="font-mono font-bold text-lg mb-4">#{id ? (id as string).slice(0, 8).toUpperCase() : 'N/A'}</p>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Issue Date</p>
-            <p className="font-bold">{invoice.date}</p>
+            <p className="font-bold">{invoice.date || '---'}</p>
           </div>
         </div>
 
@@ -66,26 +68,26 @@ export default function PrintInvoicePage() {
           <div>
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-2 border-b border-slate-200 pb-1">Billed To</h3>
             <p className="text-2xl font-black uppercase text-black">{invoice.customerName || "Walk-in Customer"}</p>
-            <p className="text-sm font-medium mt-1 text-slate-600">Client Reference: INV-{id?.slice(-4).toUpperCase()}</p>
+            <p className="text-sm font-medium mt-1 text-slate-600">Client Reference: INV-{id ? (id as string).slice(-4).toUpperCase() : 'N/A'}</p>
           </div>
           <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
             <h3 className="text-[10px] font-black uppercase text-slate-400 mb-3">Specification Breakdown</h3>
             <div className="grid grid-cols-2 gap-y-3">
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Configuration</p>
-                <p className="text-xs font-black">{invoice.type} • {invoice.palla} Palla</p>
+                <p className="text-xs font-black">{invoice.type || '---'} • {invoice.palla || '2'} Palla</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Quantity</p>
-                <p className="text-xs font-black">{invoice.qty} Units</p>
+                <p className="text-xs font-black">{invoice.qty || '1'} Units</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Width</p>
-                <p className="text-xs font-black">{invoice.width} ft</p>
+                <p className="text-xs font-black">{invoice.width || '0'} ft</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[8px] font-bold text-slate-500 uppercase">Height</p>
-                <p className="text-xs font-black">{invoice.height} ft</p>
+                <p className="text-xs font-black">{invoice.height || '0'} ft</p>
               </div>
             </div>
           </div>
@@ -94,13 +96,13 @@ export default function PrintInvoicePage() {
         {/* Technical Drawing & Glass Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <div className="bg-white border-2 border-black p-6 flex flex-col items-center justify-center rounded-sm">
-            <WindowDrawing width={invoice.width} height={invoice.height} type={invoice.type} className="scale-110" />
+            <WindowDrawing width={Number(invoice.width) || 4} height={Number(invoice.height) || 4} type={invoice.type || 'Sliding'} className="scale-110" />
           </div>
           <div className="flex flex-col justify-center space-y-6">
             <div className="border-l-[4px] border-black pl-6">
               <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Glass Calculation</h4>
-              <p className="text-3xl font-black leading-none">{invoice.glassSqFt} <span className="text-sm">SQFT</span></p>
-              <p className="text-xs font-bold text-slate-500 mt-1">Total area processed across {invoice.qty} units.</p>
+              <p className="text-3xl font-black leading-none">{invoice.glassSqFt || '0'} <span className="text-sm">SQFT</span></p>
+              <p className="text-xs font-bold text-slate-500 mt-1">Total area processed across {invoice.qty || '1'} units.</p>
             </div>
             <div className="border-l-[4px] border-black pl-6 opacity-80">
               <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Industrial Standards</h4>
@@ -121,7 +123,7 @@ export default function PrintInvoicePage() {
                 <p className="font-black text-sm uppercase">Custom Window Fabrication</p>
                 <p className="text-[10px] font-medium text-slate-500">Aluminum Profiles + Glass + Hardware + Labor</p>
               </div>
-              <p className="font-black text-lg">PKR {invoice.netAmount?.toLocaleString()}</p>
+              <p className="font-black text-lg">PKR {Number(invoice.netAmount || 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -136,7 +138,7 @@ export default function PrintInvoicePage() {
           </div>
           <div className="text-right">
             <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Net Total Amount</p>
-            <h2 className="text-6xl font-black tracking-tighter leading-none">PKR {invoice.netAmount?.toLocaleString()}</h2>
+            <h2 className="text-6xl font-black tracking-tighter leading-none">PKR {Number(invoice.netAmount || 0).toLocaleString()}</h2>
             <div className="mt-4 flex items-center justify-end gap-2 text-green-600">
               <div className="h-2 w-2 rounded-full bg-green-600" />
               <p className="text-[10px] font-black uppercase">Payment Received / Full Settlement</p>
@@ -155,22 +157,20 @@ export default function PrintInvoicePage() {
         </div>
       </div>
 
-      <style>
-        {`
-          @media print {
-            body {
-              background: white !important;
-              padding: 0 !important;
-            }
-            .print-hidden {
-              display: none !important;
-            }
-            @page {
-              margin: 15mm;
-            }
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          body {
+            background: white !important;
+            padding: 0 !important;
           }
-        `}
-      </style>
+          .print-hidden {
+            display: none !important;
+          }
+          @page {
+            margin: 15mm;
+          }
+        }
+      ` }} />
     </div>
   );
 }
