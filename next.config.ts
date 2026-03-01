@@ -3,6 +3,7 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
+  distDir: 'public', // Redirects build output to public folder as requested
   typescript: {
     ignoreBuildErrors: true,
   },

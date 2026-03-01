@@ -130,22 +130,17 @@ export default function FormulasPage() {
 
     updateDocumentNonBlocking(doc(firestore, "sections", selectedSectionId), updatedData);
     
-    toast({ 
-      title: "Logic Saved", 
-      description: `Formula updated for ${currentSection.name}.` 
-    })
+    toast({ title: "Logic Saved", description: `Formula updated for ${currentSection.name}.` })
   }
 
   const handleDeleteFormula = (sectionId: string) => {
     if (!firestore) return;
-    
     updateDocumentNonBlocking(doc(firestore, "sections", sectionId), {
       top_formula: "None",
       bottom_formula: "None",
       side_formula: "None",
       updatedAt: new Date().toISOString()
     });
-
     toast({ title: "Logic Reset", description: "Profile has been reset to default." });
   }
 
@@ -171,10 +166,8 @@ export default function FormulasPage() {
         <main className="flex-1 p-4 md:p-6 space-y-8 max-w-4xl mx-auto pb-20">
           <Card className="border-none shadow-xl overflow-hidden">
             <CardHeader className="pb-4">
-              <div>
-                <CardTitle className="text-lg">Logic Builder</CardTitle>
-                <CardDescription>Configure rules for selected profiles.</CardDescription>
-              </div>
+              <CardTitle className="text-lg">Logic Builder</CardTitle>
+              <CardDescription>Configure calculation rules for profiles.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
@@ -185,7 +178,7 @@ export default function FormulasPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {sections?.map(s => (
-                      <SelectItem key={s.id} value={s.id} className="font-medium">{s.name}</SelectItem>
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -198,7 +191,7 @@ export default function FormulasPage() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between border-t p-6 bg-muted/10">
-              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" onClick={() => {
+              <Button variant="ghost" size="sm" className="gap-2" onClick={() => {
                 setTopFormula({ variable: "Width", operator: "+", constant: "0" })
                 setBottomFormula({ variable: "Width", operator: "+", constant: "0" })
                 setSideFormula({ variable: "Height", operator: "+", constant: "0" })
@@ -211,6 +204,7 @@ export default function FormulasPage() {
             </CardFooter>
           </Card>
 
+          {/* Active Profiles List at Bottom */}
           <Card className="border-none shadow-lg bg-card overflow-hidden">
             <CardHeader className="bg-muted/30 border-b">
               <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
@@ -223,24 +217,17 @@ export default function FormulasPage() {
                   {configuredSections.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-40">
                       <AlertTriangle className="h-12 w-12 mb-4 text-destructive" />
-                      <p className="text-sm font-bold uppercase tracking-tight">No active formulas found.</p>
-                      <p className="text-xs mt-1">Configure a profile above to activate it.</p>
+                      <p className="text-sm font-bold uppercase">No active formulas found.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {configuredSections.map(s => (
-                        <div key={s.id} className="p-4 bg-muted/20 rounded-xl border border-border/50 flex items-center justify-between group hover:bg-accent/5 hover:border-accent/20 transition-all">
+                        <div key={s.id} className="p-4 bg-muted/20 rounded-xl border border-border/50 flex items-center justify-between hover:bg-accent/5 transition-all">
                           <div className="flex items-center gap-3">
-                            <div className="h-2 w-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                            <div className="h-2 w-2 rounded-full bg-green-500" />
                             <span className="font-black text-accent text-sm tracking-tight">{s.name}</span>
                           </div>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full"
-                            onClick={() => handleDeleteFormula(s.id)}
-                            title="Reset Formula"
-                          >
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteFormula(s.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>

@@ -36,7 +36,7 @@ export default function InvoicesPage() {
   }, [invoices, searchTerm]);
 
   const handlePrint = (id: string) => {
-    window.open(`/invoices/${id}/print`, '_blank');
+    window.open(`/invoices/print?id=${id}`, '_blank');
   }
 
   return (
@@ -92,7 +92,7 @@ export default function InvoicesPage() {
                       <TableCell className="text-right font-bold text-accent">PKR {inv.netAmount?.toLocaleString()}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">
-                          {inv.status || "Completed"}
+                          {inv.status || "Paid"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -104,10 +104,7 @@ export default function InvoicesPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem className="gap-2" onClick={() => handlePrint(inv.id)}>
-                              <Printer className="h-4 w-4" /> Print
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
-                              <Download className="h-4 w-4" /> PDF
+                              <Printer className="h-4 w-4" /> Print Bill
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

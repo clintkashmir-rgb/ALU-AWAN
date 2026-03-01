@@ -48,6 +48,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
+  // Strict filtering: Only sections with formulas
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -63,27 +64,18 @@ export default function NewOrderPage() {
     return parseFloat((w * h * q).toFixed(2))
   }, [width, height, qty])
 
-  const glassAmount = React.useMemo(() => {
-    return Math.round(glassSqFt * (parseFloat(glassRate) || 0))
-  }, [glassSqFt, glassRate])
-
   const evaluateFormula = (formula: string | undefined, w: number, h: number): number => {
     try {
       if (!formula || formula === 'None') return 0
       const parts = formula.split(/\s+/)
       if (parts.length < 3) return 0
-      
-      const variableValue = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0
-      const op = parts[1]
-      const val = parseFloat(parts[2]) || 0
-      
-      let result = 0
-      if (op === '+') result = variableValue + val
-      else if (op === '-') result = variableValue - val
-      else if (op === '*') result = variableValue * val
-      else if (op === '/') result = val !== 0 ? variableValue / val : 0
-      
-      return isNaN(result) ? 0 : result
+      const varVal = parts[0] === 'Width' ? w : parts[0] === 'Height' ? h : 0
+      const op = parts[1]; const val = parseFloat(parts[2]) || 0
+      if (op === '+') return varVal + val
+      if (op === '-') return varVal - val
+      if (op === '*') return varVal * val
+      if (op === '/') return val !== 0 ? varVal / val : 0
+      return 0
     } catch { return 0 }
   }
 
@@ -97,67 +89,30 @@ export default function NewOrderPage() {
       const top = evaluateFormula(s.top_formula, w, h)
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
-      
-      // Industrial logic: Top + Bottom + 2 Side pieces
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
-      
-      return {
-        id: s.id,
-        name: s.name,
-        totalFt: parseFloat(totalFt.toFixed(2)),
-        rate: rate,
-        amount: Math.round(totalFt * rate)
-      }
+      return { id: s.id, name: s.name, totalFt: parseFloat(totalFt.toFixed(2)), rate, amount: Math.round(totalFt * rate) }
     })
   }, [width, height, qty, configuredSections, showResults])
 
+  const glassAmount = Math.round(glassSqFt * (parseFloat(glassRate) || 0))
   const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
-    if (!width || !height || !qty) {
-      toast({ variant: "destructive", title: "Inputs Required", description: "Enter Width, Height and Qty." })
-      return
-    }
-    
-    if (configuredSections.length === 0) {
-      toast({ 
-        variant: "destructive", 
-        title: "No Formulas Found", 
-        description: "Please add logic in Formula Builder first." 
-      })
-      return
-    }
-    
+    if (!width || !height || !qty) { toast({ variant: "destructive", title: "Missing Inputs" }); return; }
+    if (configuredSections.length === 0) { toast({ variant: "destructive", title: "No Formulas Found" }); return; }
     setShowResults(true)
   }
 
   const handleSaveOrder = () => {
-    if (!customerName) {
-      toast({ variant: "destructive", title: "Missing Info", description: "Enter Customer Name." })
-      return
-    }
-
-    if (!firestore) return;
-    
-    const orderData = {
-      customerName,
-      date: new Date().toLocaleDateString(),
-      width: parseFloat(width),
-      height: parseFloat(height),
-      palla: parseInt(palla),
-      qty: parseInt(qty),
-      type: windowType,
-      glassSqFt,
-      glassAmount,
-      netAmount: grandTotal,
-      status: "Paid",
-      timestamp: serverTimestamp()
-    };
-
-    addDocumentNonBlocking(collection(firestore, "invoices"), orderData);
-    
-    toast({ title: "Order Saved", description: "Syncing to Dashboard..." });
+    if (!customerName || !firestore) { toast({ variant: "destructive", title: "Customer Name Required" }); return; }
+    addDocumentNonBlocking(collection(firestore, "invoices"), {
+      customerName, date: new Date().toLocaleDateString(),
+      width: parseFloat(width), height: parseFloat(height),
+      palla: parseInt(palla), qty: parseInt(qty), type: windowType,
+      glassSqFt, netAmount: grandTotal, status: "Paid", timestamp: serverTimestamp()
+    });
+    toast({ title: "Order Saved" });
     router.push("/");
   }
 
@@ -167,21 +122,14 @@ export default function NewOrderPage() {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger />
-            <h1 className="font-headline text-xl font-bold uppercase">New Order</h1>
-          </div>
+        <header className="flex h-16 shrink-0 items-center border-b px-4 sticky top-0 bg-background/80 backdrop-blur-sm z-10">
+          <SidebarTrigger />
+          <h1 className="ml-2 font-headline text-xl font-bold uppercase">New Order</h1>
         </header>
 
         <main className="flex-1 p-4 md:p-6 space-y-6 max-w-5xl mx-auto">
           <Card className="border-none shadow-xl">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-sm font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
-                <Ruler className="h-4 w-4 text-accent" /> 1. Dimensions Entry
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="pt-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                 <div className="md:col-span-2 space-y-2">
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Customer Name</Label>
@@ -191,10 +139,7 @@ export default function NewOrderPage() {
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Type</Label>
                   <Select value={windowType} onValueChange={(v: any) => { setWindowType(v); setShowResults(false); }}>
                     <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Sliding">Sliding</SelectItem>
-                      <SelectItem value="Fixed">Fixed</SelectItem>
-                    </SelectContent>
+                    <SelectContent><SelectItem value="Sliding">Sliding</SelectItem><SelectItem value="Fixed">Fixed</SelectItem></SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
@@ -209,11 +154,7 @@ export default function NewOrderPage() {
                   <Label className="text-[10px] font-bold uppercase text-muted-foreground">Palla</Label>
                   <Select value={palla} onValueChange={(v) => { setPalla(v); setShowResults(false); }}>
                     <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2">2 Palla</SelectItem>
-                      <SelectItem value="3">3 Palla</SelectItem>
-                      <SelectItem value="4">4 Palla</SelectItem>
-                    </SelectContent>
+                    <SelectContent><SelectItem value="2">2 Palla</SelectItem><SelectItem value="3">3 Palla</SelectItem><SelectItem value="4">4 Palla</SelectItem></SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
@@ -225,39 +166,26 @@ export default function NewOrderPage() {
               {configuredSections.length === 0 && (
                 <div className="p-4 bg-destructive/10 border border-dashed border-destructive/30 rounded-xl flex flex-col items-center justify-center gap-2 text-destructive">
                   <AlertTriangle className="h-6 w-6" />
-                  <p className="text-[10px] font-black uppercase text-center">
-                    Attention: No formulas added!<br/>
-                    Please add logic in Formula Builder first.
-                  </p>
+                  <p className="text-[10px] font-black uppercase">Please add logic in Formula Builder first.</p>
                 </div>
               )}
 
-              <Button 
-                onClick={handleCalculate} 
-                className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2 mt-4"
-                disabled={configuredSections.length === 0}
-              >
+              <Button onClick={handleCalculate} className="w-full h-12 font-black bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg rounded-xl gap-2" disabled={configuredSections.length === 0}>
                 <CheckCircle className="h-5 w-5" /> OK - CALCULATE
               </Button>
             </CardContent>
           </Card>
 
-          {showResults && configuredSections.length > 0 && (
+          {showResults && (
             <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-none shadow-lg bg-white overflow-hidden p-6 flex items-center justify-center">
+                <Card className="border-none shadow-lg bg-white p-6 flex items-center justify-center">
                   <WindowDrawing width={parseFloat(width)} height={parseFloat(height)} type={windowType} />
                 </Card>
-
                 <Card className="md:col-span-2 border-none shadow-lg bg-accent/5 border-2 border-dashed border-accent/20">
-                  <CardHeader>
-                    <CardTitle className="text-[10px] font-black uppercase text-accent tracking-widest flex items-center gap-2">
-                      <Calculator className="h-4 w-4" /> Glass Calculation
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="pt-6 space-y-6">
                     <div className="flex justify-between items-center p-4 bg-background rounded-lg border">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Result: {width}ft x {height}ft x {qty}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Area: {width}x{height}ft</span>
                       <span className="text-xl font-black text-accent">{glassSqFt} Sqft</span>
                     </div>
                     <div className="grid grid-cols-2 gap-6">
@@ -275,24 +203,14 @@ export default function NewOrderPage() {
               </div>
 
               <Card className="border-none shadow-xl overflow-hidden">
-                <CardHeader className="bg-muted/30">
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest">Section Comparison</CardTitle>
-                </CardHeader>
                 <CardContent className="p-0">
                   <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="font-bold text-[10px]">Profile</TableHead>
-                        <TableHead className="text-right font-bold text-[10px]">Total Ft</TableHead>
-                        <TableHead className="text-right font-bold text-[10px]">Rate</TableHead>
-                        <TableHead className="text-right font-bold text-[10px]">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow className="bg-muted/50"><TableHead>Profile</TableHead><TableHead className="text-right">Total Ft</TableHead><TableHead className="text-right">Rate</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {comparisonData.map(s => (
-                        <TableRow key={s.id} className="hover:bg-muted/10 transition-colors">
+                        <TableRow key={s.id} className="hover:bg-muted/10">
                           <TableCell className="font-black text-accent text-xs">{s.name}</TableCell>
-                          <TableCell className="text-right font-mono font-bold text-xs">{s.totalFt} ft</TableCell>
+                          <TableCell className="text-right font-mono text-xs">{s.totalFt} ft</TableCell>
                           <TableCell className="text-right text-[10px] opacity-70">PKR {s.rate}</TableCell>
                           <TableCell className="text-right font-black text-lg">PKR {s.amount.toLocaleString()}</TableCell>
                         </TableRow>
@@ -307,14 +225,8 @@ export default function NewOrderPage() {
                   <Label className="text-[8px] uppercase font-black tracking-widest">Discount (%)</Label>
                   <Input type="number" value={discountPercent} onChange={e => setDiscountPercent(parseFloat(e.target.value) || 0)} className="h-10 text-lg font-bold" />
                 </div>
-                <div className="text-right space-y-1 flex-1">
-                  <p className="text-[8px] uppercase font-black text-muted-foreground tracking-widest">Grand Total</p>
-                  <p className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</p>
-                </div>
-                <Button 
-                  onClick={handleSaveOrder} 
-                  className="h-14 px-10 bg-primary text-primary-foreground hover:bg-primary/90 text-lg font-black rounded-xl shadow-xl gap-2"
-                >
+                <div className="text-right flex-1"><p className="text-[8px] uppercase font-black text-muted-foreground">Grand Total</p><p className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</p></div>
+                <Button onClick={handleSaveOrder} className="h-14 px-10 bg-primary text-primary-foreground text-lg font-black rounded-xl shadow-xl gap-2">
                   <Save className="h-5 w-5" /> SAVE ORDER
                 </Button>
               </div>
