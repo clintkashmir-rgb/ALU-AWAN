@@ -168,7 +168,7 @@ export default function FormulasPage() {
           </h1>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 space-y-8 max-w-4xl mx-auto">
+        <main className="flex-1 p-4 md:p-6 space-y-8 max-w-4xl mx-auto pb-20">
           <Card className="border-none shadow-xl overflow-hidden">
             <CardHeader className="pb-4">
               <div>
