@@ -3,7 +3,8 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
-  distDir: 'public', // Redirects build output to public folder as requested
+  // Removed distDir: 'public' because 'public' is a reserved directory in Next.js
+  // Static export will now correctly go to the default 'out' directory
   typescript: {
     ignoreBuildErrors: true,
   },
