@@ -31,3 +31,35 @@ DevSettings.reload();
     <script src="app.js"></script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment Check</title>
+</head>
+<body>
+    <h1>Deployment Configuration Error</h1>
+    <p>You may have deployed the wrong directory for your application. Check your <code>firebase.json</code> and make sure the <code>public</code> directory is pointing to a directory that contains an <code>index.html</code> file.</p>
+</body>
+</html><script>
+  const fs = require('fs');
+  const path = require('path');
+
+  async function syncFolders(src, dest) {
+      if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+      const entries = fs.readdirSync(src, { withFileTypes: true });
+
+      for (let entry of entries) {
+          const srcPath = path.join(src, entry.name);
+          const destPath = path.join(dest, entry.name);
+          entry.isDirectory() ? 
+              await syncFolders(srcPath, destPath) : 
+              fs.copyFileSync(srcPath, destPath);
+      }
+  }
+
+  // Usage for updating out and public folders
+  syncFolders('./src', './out');
+  syncFolders('./src', './public');
+</script>
