@@ -204,7 +204,6 @@ export default function FormulasPage() {
             </CardFooter>
           </Card>
 
-          {/* Active Profiles List at Bottom */}
           <Card className="border-none shadow-lg bg-card overflow-hidden">
             <CardHeader className="bg-muted/30 border-b">
               <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
