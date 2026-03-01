@@ -300,7 +300,7 @@ export default function NewOrderPage() {
                 </div>
                 <div className="text-right space-y-1 flex-1">
                   <p className="text-[8px] uppercase font-black text-muted-foreground tracking-widest">Grand Total</p>
-                  <h2 className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</h2>
+                  <p className="text-4xl font-black text-accent">PKR {grandTotal.toLocaleString()}</p>
                 </div>
                 <Button 
                   onClick={handleSaveOrder} 
