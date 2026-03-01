@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, FileText, Download, Printer, MoreVertical, LayoutList } from "lucide-react"
+import { Search, FileText, Printer, MoreVertical, LayoutList } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useCollection, useMemoFirebase } from "@/firebase"
@@ -36,7 +36,7 @@ export default function InvoicesPage() {
   }, [invoices, searchTerm]);
 
   const handlePrint = (id: string) => {
-    window.open(`/invoices/print?id=${id}`, '_blank');
+    router.push(`/invoices/print?id=${id}`);
   }
 
   return (
