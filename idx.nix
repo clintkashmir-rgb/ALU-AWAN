@@ -1,14 +1,14 @@
 
-{pkgs}: {
+{ pkgs, ... }: {
   channel = "stable-24.05";
   packages = [
     pkgs.nodejs_20
-    pkgs.nodePackages.firebase-tools
     pkgs.zulu17
+    pkgs.firebase-tools
   ];
-  idx.extensions = [
-    "rvest.vs-code-prettier-eslint"
-  ];
+  env = {
+    PORT = "9002";
+  };
   idx.previews = {
     enable = true;
     previews = {

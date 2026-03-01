@@ -115,17 +115,16 @@ export default function NewOrderPage() {
     setShowResults(true)
   }
 
-  const handleSaveOrder = () => {
+  const handleSaveOrder = async () => {
     if (!customerName || !firestore) {
       toast({ variant: "destructive", title: "Customer Name Required" })
       return
     }
 
-    // Auto-generate ID
     const timestampId = Date.now().toString().slice(-6);
     const invoiceNumber = `AW-${new Date().getFullYear()}-${timestampId}`;
 
-    addDocumentNonBlocking(collection(firestore, "invoices"), {
+    await addDocumentNonBlocking(collection(firestore, "invoices"), {
       invoiceNumber,
       customerName,
       date: new Date().toLocaleDateString(),
@@ -141,7 +140,7 @@ export default function NewOrderPage() {
     });
 
     toast({ title: "Order Saved", description: `Invoice ${invoiceNumber} synchronized.` })
-    router.push("/")
+    router.push("/invoices")
   }
 
   if (isUserLoading || !user) return null
