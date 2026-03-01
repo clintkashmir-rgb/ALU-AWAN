@@ -41,6 +41,7 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
+  // Strict Filter: Only sections with formulas
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -91,6 +92,7 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
+      // Industrial Logic: (Top + Bottom + 2*Side) * Quantity
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
