@@ -112,7 +112,6 @@ export default function NewOrderPage() {
     })
   }, [width, height, qty, configuredSections, showResults])
 
-  // Use the first configured section as the primary amount for summary if multiple exist
   const grandTotal = Math.round((glassAmount + (comparisonData[0]?.amount || 0)) * (1 - discountPercent / 100))
 
   const handleCalculate = () => {
