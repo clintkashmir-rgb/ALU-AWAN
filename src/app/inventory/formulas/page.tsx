@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calculator, Save, RefreshCcw, LayoutGrid, AlertTriangle, CheckCircle2, Trash2 } from "lucide-react"
+import { Calculator, Save, RefreshCcw, LayoutGrid, AlertTriangle, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -89,7 +89,7 @@ export default function FormulasPage() {
       updatedAt: new Date().toISOString()
     });
 
-    toast({ title: "Logic Deleted", description: "Formula has been reset to start." });
+    toast({ title: "Logic Reset", description: "Profile has been reset to default." });
   }
 
   const FormulaRow = ({ label, state, setState }: any) => {
@@ -160,7 +160,7 @@ export default function FormulasPage() {
         </header>
 
         <main className="flex-1 p-4 md:p-6 space-y-8 max-w-4xl mx-auto">
-          {/* Top Section: Logic Builder */}
+          {/* Logic Builder */}
           <Card className="border-none shadow-xl overflow-hidden">
             <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
@@ -211,11 +211,11 @@ export default function FormulasPage() {
             </CardFooter>
           </Card>
 
-          {/* Bottom Section: Active Profiles List */}
+          {/* Active Profiles List (Now at Bottom) */}
           <Card className="border-none shadow-lg bg-card overflow-hidden">
             <CardHeader className="bg-muted/30 border-b">
               <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2">
-                <LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles (Formula Set)
+                <LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles (Formulas Set)
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
@@ -225,7 +225,7 @@ export default function FormulasPage() {
                     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-40">
                       <AlertTriangle className="h-12 w-12 mb-4" />
                       <p className="text-sm font-bold uppercase tracking-tight">No active formulas found.</p>
-                      <p className="text-xs mt-1">Configure a profile above to see it here.</p>
+                      <p className="text-xs mt-1">Configure a profile above to activate it.</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -240,7 +240,7 @@ export default function FormulasPage() {
                             size="icon" 
                             className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full"
                             onClick={() => handleDeleteFormula(s.id)}
-                            title="Delete Logic"
+                            title="Reset Formula"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -40,7 +41,6 @@ export default function NewOrderPage() {
   
   const { data: allSections } = useCollection<Section>(sectionsQuery);
 
-  // Strict Filter: Only show sections that have an active formula
   const configuredSections = React.useMemo(() => {
     return allSections?.filter(s => 
       (s.top_formula && s.top_formula !== 'None') || 
@@ -91,7 +91,7 @@ export default function NewOrderPage() {
       const bottom = evaluateFormula(s.bottom_formula, w, h)
       const side = evaluateFormula(s.side_formula, w, h)
       
-      // Industrial logic: Top + Bottom + 2 Sides
+      // Total Ft = (Top + Bottom + 2*Side) * Qty
       const totalFt = (top + bottom + (2 * side)) * q
       const rate = s.rate_per_ft || 220
       
@@ -150,7 +150,7 @@ export default function NewOrderPage() {
 
     addDocumentNonBlocking(collection(firestore, "invoices"), orderData);
     
-    toast({ title: "Order Saved", description: "Data synced to your Dashboard." });
+    toast({ title: "Order Saved", description: "Syncing to Dashboard..." });
     router.push("/");
   }
 

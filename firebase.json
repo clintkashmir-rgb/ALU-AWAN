@@ -1,3 +1,4 @@
+
 {
   "hosting": {
     "site": "studio-5816171861-9dff2",
@@ -12,21 +13,12 @@
     }
   },
   "database": {
-    "rules": "database"
-  },
-  "emulators": {
-    "dataconnect": {
-      "dataDir": "dataconnect/.dataconnect/pgliteData"
-    }
-  },
-  "dataconnect": {
-    "source": "dataconnect"
+    "rules": "database.rule.json"
   },
   "firestore": {
     "database": "(default)",
     "location": "us-central1",
-    "rules": "firestore rules",
-    "indexes": " Firestore indexes"
+    "rules": "firestore.rules"
   },
   "functions": [
     {
