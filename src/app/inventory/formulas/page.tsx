@@ -157,7 +157,7 @@ export default function FormulasPage() {
             </CardFooter>
           </Card>
 
-          <Card className="border-none shadow-lg overflow-hidden">
+          <Card className="border-none shadow-lg overflow-hidden mt-12">
             <CardHeader className="bg-muted/30 border-b"><CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2"><LayoutGrid className="h-4 w-4 text-accent" /> Active Profiles</CardTitle></CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[300px]">

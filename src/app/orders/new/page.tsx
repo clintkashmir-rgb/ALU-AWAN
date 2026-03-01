@@ -13,9 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Save, CheckCircle, AlertTriangle } from "lucide-react"
 import { Section } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { collection, serverTimestamp } from "firebase/firestore"
+import { collection, doc, runTransaction, serverTimestamp } from "firebase/firestore"
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase"
-import { addDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 import { useRouter } from "next/navigation"
 import { WindowDrawing } from "@/components/WindowDrawing"
 
@@ -108,10 +107,6 @@ export default function NewOrderPage() {
       toast({ variant: "destructive", title: "Missing Inputs" })
       return
     }
-    if (configuredSections.length === 0) {
-      toast({ variant: "destructive", title: "No Logic Found", description: "Set formulas in Formula Builder first." })
-      return
-    }
     setShowResults(true)
   }
 
@@ -121,26 +116,44 @@ export default function NewOrderPage() {
       return
     }
 
-    const timestampId = Date.now().toString().slice(-6);
-    const invoiceNumber = `AW-${new Date().getFullYear()}-${timestampId}`;
+    try {
+      const result = await runTransaction(firestore, async (transaction) => {
+        const metadataRef = doc(firestore, "app_settings", "invoice_metadata");
+        const metadataDoc = await transaction.get(metadataRef);
+        
+        let nextId = 1;
+        if (metadataDoc.exists()) {
+          nextId = (metadataDoc.data().lastInvoiceId || 0) + 1;
+        }
+        
+        const invoiceNumber = `INV-${nextId.toString().padStart(3, '0')}`;
+        const newInvoiceRef = doc(collection(firestore, "invoices"));
+        
+        transaction.set(metadataRef, { lastInvoiceId: nextId }, { merge: true });
+        transaction.set(newInvoiceRef, {
+          invoiceNumber,
+          customerName,
+          date: new Date().toLocaleDateString(),
+          width: parseFloat(width),
+          height: parseFloat(height),
+          palla: parseInt(palla),
+          qty: parseInt(qty),
+          type: windowType,
+          glassSqFt,
+          netAmount: grandTotal,
+          status: "Paid",
+          timestamp: serverTimestamp()
+        });
 
-    await addDocumentNonBlocking(collection(firestore, "invoices"), {
-      invoiceNumber,
-      customerName,
-      date: new Date().toLocaleDateString(),
-      width: parseFloat(width),
-      height: parseFloat(height),
-      palla: parseInt(palla),
-      qty: parseInt(qty),
-      type: windowType,
-      glassSqFt,
-      netAmount: grandTotal,
-      status: "Paid",
-      timestamp: serverTimestamp()
-    });
+        return invoiceNumber;
+      });
 
-    toast({ title: "Order Saved", description: `Invoice ${invoiceNumber} synchronized.` })
-    router.push("/invoices")
+      toast({ title: "Order Saved", description: `Invoice ${result} created successfully.` })
+      router.push("/invoices")
+    } catch (error) {
+      console.error("Transaction failed: ", error);
+      toast({ variant: "destructive", title: "Save Failed", description: "Could not generate sequential ID." });
+    }
   }
 
   if (isUserLoading || !user) return null
@@ -181,7 +194,7 @@ export default function NewOrderPage() {
                   <Input type="number" step="any" className="font-bold text-center" value={height} onChange={e => { setHeight(e.target.value); setShowResults(false); }} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Palla</Label>
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Palla Box</Label>
                   <Select value={palla} onValueChange={(v) => { setPalla(v); setShowResults(false); }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -200,7 +213,7 @@ export default function NewOrderPage() {
               {configuredSections.length === 0 && (
                 <div className="p-4 bg-destructive/10 border border-dashed border-destructive/30 rounded-xl flex flex-col items-center justify-center gap-2 text-destructive">
                   <AlertTriangle className="h-6 w-6" />
-                  <p className="text-[10px] font-black uppercase text-center">No logic configured. Set formulas in Formula Builder first to see prices.</p>
+                  <p className="text-[10px] font-black uppercase text-center">No logic configured. Set formulas in Formula Builder first.</p>
                 </div>
               )}
 
@@ -237,7 +250,7 @@ export default function NewOrderPage() {
               </div>
 
               <Card className="border-none shadow-xl overflow-hidden bg-card">
-                <CardHeader className="bg-muted/30 py-3"><CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Price Comparison by Profile</CardTitle></CardHeader>
+                <CardHeader className="bg-muted/30 py-3"><CardTitle className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Profile Price Comparison</CardTitle></CardHeader>
                 <CardContent className="p-0">
                   <Table>
                     <TableHeader><TableRow className="bg-muted/50 border-b"><TableHead className="font-black uppercase text-[10px]">Profile Name</TableHead><TableHead className="text-right font-black uppercase text-[10px]">Total Length</TableHead><TableHead className="text-right font-black uppercase text-[10px]">Unit Rate</TableHead><TableHead className="text-right font-black uppercase text-[10px]">Total Amount</TableHead></TableRow></TableHeader>

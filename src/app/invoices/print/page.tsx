@@ -53,7 +53,7 @@ function PrintContent() {
               INVOICE
             </div>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Invoice Number</p>
-            <p className="font-mono font-bold text-lg mb-4 text-black">{invoice.invoiceNumber || `#${id.slice(0, 8).toUpperCase()}`}</p>
+            <p className="font-mono font-bold text-lg mb-4 text-black">{invoice.invoiceNumber || `INV-${id.slice(0, 4).toUpperCase()}`}</p>
             <p className="text-xs font-black uppercase opacity-40 mb-1">Issue Date</p>
             <p className="font-bold text-black">{invoice.date || '---'}</p>
           </div>
@@ -99,7 +99,7 @@ function PrintContent() {
             </div>
             <div className="border-l-[4px] border-black pl-6 opacity-80">
               <h4 className="text-[10px] font-black uppercase text-slate-400 mb-1">Calculated Logic</h4>
-              <p className="text-xs font-bold leading-relaxed text-black">Precision calculated using Formula Builder standards for Top, Bottom, and Side profiles.</p>
+              <p className="text-xs font-bold leading-relaxed text-black">Precision calculated using Formula Builder standards.</p>
             </div>
           </div>
         </div>
