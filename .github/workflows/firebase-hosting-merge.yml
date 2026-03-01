@@ -15,4 +15,4 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STUDIO_5816171861_9DFF2 }}'
           channelId: live
-          projectId: studio-5816171861-9dff2
+          projectId: awan-alu-account

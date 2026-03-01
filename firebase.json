@@ -1,8 +1,8 @@
 
 {
   "hosting": {
-    "site": "studio-5816171861-9dff2-e26e5",
-    "public": "out",
+    "site": "awan-alu-account",
+    "public": "public",
     "ignore": [
       "firebase.json",
       "**/.*",
